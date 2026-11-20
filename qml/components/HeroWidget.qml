@@ -209,7 +209,7 @@ Item {
         anchors.left: currentWeather.left
         anchors.right: parent.right
         anchors.rightMargin: 24 * hero.s
-        height: 94 * hero.s
+        height: 110 * hero.s
         anchors.top: topInfoArea.bottom
         anchors.topMargin: 3 * hero.s
 
@@ -325,8 +325,8 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: 24 * hero.s
-        height: 164 * hero.s
+        anchors.bottomMargin: 18 * hero.s
+        height: 180 * hero.s
 
         Item {
             id: recentArea
@@ -352,7 +352,7 @@ Item {
                 anchors.topMargin: 8 * hero.s
                 anchors.left: parent.left
                 anchors.right: parent.right
-                height: 148 * hero.s
+                height: 150 * hero.s
                 orientation: ListView.Horizontal
                 spacing: 12 * hero.s
                 interactive: true
