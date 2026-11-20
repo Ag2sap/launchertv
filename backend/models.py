@@ -109,7 +109,6 @@ def _parse_desktop_file(path: Path) -> dict | None:
     icon = e.get("Icon", "").strip()
     cats_raw = e.get("Categories", "")
     categories = [c.strip() for c in cats_raw.split(";") if c.strip()]
-
     wm_class = e.get("StartupWMClass", "").strip()
 
     return {
@@ -211,6 +210,18 @@ class AppListModel(QAbstractListModel):
     def desktopIdAt(self, row: int) -> str:
         if 0 <= row < len(self._apps):
             return self._apps[row]["desktop_id"]
+        return ""
+
+    @Slot(int, result=str)
+    def nameAt(self, row: int) -> str:
+        if 0 <= row < len(self._apps):
+            return self._apps[row]["name"]
+        return ""
+
+    @Slot(int, result=str)
+    def iconSourceAt(self, row: int) -> str:
+        if 0 <= row < len(self._apps):
+            return self._apps[row]["icon_source"]
         return ""
 
     def reset_apps(self, apps: list[dict]):

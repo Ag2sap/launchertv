@@ -4,9 +4,11 @@ Item {
     id: hero
 
     property bool isActive: false
+    property bool workspaceActive: false
     property int currentCardIndex: 0
     readonly property real s: appConfig.scale
     property var forecastDays: []
+    property alias workspaceRow: workspaceRowItem
 
     function syncForecast() {
         try {
@@ -47,7 +49,9 @@ Item {
         let cmd = mostUsedModel.execCmdAt(currentCardIndex);
         let did = mostUsedModel.desktopIdAt(currentCardIndex);
         let wmc = mostUsedModel.wmClassAt(currentCardIndex);
-        if (cmd) appLauncher.launch(cmd, did, wmc);
+        let name = mostUsedModel.nameAt(currentCardIndex);
+        let icon = mostUsedModel.iconSourceAt(currentCardIndex);
+        if (cmd) appLauncher.launch(cmd, did, wmc, name, icon);
     }
 
     // ── Clock ───────────────────────────────────────────────────
@@ -55,7 +59,7 @@ Item {
     Column {
         id: topStack
         anchors.top: parent.top
-        anchors.topMargin: 20 * hero.s
+        anchors.topMargin: 18 * hero.s
         anchors.horizontalCenter: parent.horizontalCenter
         spacing: 2 * hero.s
 
@@ -123,14 +127,14 @@ Item {
             }
         }
 
-        // All current-weather details are grouped below the clock.
+        // Current weather and location are kept together below the clock.
         Row {
             anchors.horizontalCenter: parent.horizontalCenter
             spacing: 16 * hero.s
 
             Image {
-                width: 66 * hero.s
-                height: 66 * hero.s
+                width: 62 * hero.s
+                height: 62 * hero.s
                 source: weather.icon
                 sourceSize: Qt.size(128, 128)
                 fillMode: Image.PreserveAspectFit
@@ -144,23 +148,22 @@ Item {
 
                 Text {
                     text: weather.temperature
-                    font { pixelSize: 34 * hero.s; bold: true; family: "Sans" }
+                    font { pixelSize: 32 * hero.s; bold: true; family: "Sans" }
                     color: "#FFFFFF"
                 }
 
                 Text {
                     text: weather.condition
-                    font { pixelSize: 16 * hero.s; family: "Sans" }
+                    font { pixelSize: 15 * hero.s; family: "Sans" }
                     color: "#B0B8C1"
                 }
 
                 Text {
                     text: weather.location || "—"
-                    font { pixelSize: 14 * hero.s; bold: true; family: "Sans" }
+                    font { pixelSize: 13 * hero.s; bold: true; family: "Sans" }
                     color: "#8794A4"
                     elide: Text.ElideRight
                     width: 230 * hero.s
-                    horizontalAlignment: Text.AlignLeft
                 }
             }
         }
@@ -171,9 +174,9 @@ Item {
     Item {
         id: forecastArea
         width: Math.min(parent.width - 120 * hero.s, 610 * hero.s)
-        height: 104 * hero.s
+        height: 92 * hero.s
         anchors.top: topStack.bottom
-        anchors.topMargin: 5 * hero.s
+        anchors.topMargin: 1 * hero.s
         anchors.horizontalCenter: parent.horizontalCenter
 
         Canvas {
@@ -181,7 +184,7 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            height: 42 * hero.s
+            height: 34 * hero.s
 
             onWidthChanged: requestPaint()
             onHeightChanged: requestPaint()
@@ -229,11 +232,8 @@ Item {
 
         Row {
             anchors.fill: parent
-            spacing: 0
-
             Repeater {
                 model: 5
-
                 Item {
                     readonly property var dayData: index < hero.forecastDays.length ? hero.forecastDays[index] : null
                     width: forecastArea.width / 5
@@ -245,8 +245,8 @@ Item {
                         spacing: 1 * hero.s
 
                         Image {
-                            width: 31 * hero.s
-                            height: 31 * hero.s
+                            width: 28 * hero.s
+                            height: 28 * hero.s
                             anchors.horizontalCenter: parent.horizontalCenter
                             source: dayData ? dayData.icon : ""
                             sourceSize: Qt.size(64, 64)
@@ -258,7 +258,7 @@ Item {
                         Text {
                             width: parent.width
                             text: dayData ? (dayData.min + " / " + dayData.max + "°") : "—"
-                            font { pixelSize: 13 * hero.s; bold: true; family: "Sans" }
+                            font { pixelSize: 12 * hero.s; bold: true; family: "Sans" }
                             horizontalAlignment: Text.AlignHCenter
                             color: "#FFFFFF"
                         }
@@ -266,7 +266,7 @@ Item {
                         Text {
                             width: parent.width
                             text: dayData ? (dayData.rain + "%") : ""
-                            font { pixelSize: 11 * hero.s; family: "Sans" }
+                            font { pixelSize: 10 * hero.s; family: "Sans" }
                             horizontalAlignment: Text.AlignHCenter
                             color: "#9AA0A6"
                         }
@@ -274,7 +274,7 @@ Item {
                         Text {
                             width: parent.width
                             text: dayData ? dayData.abbr : ""
-                            font { pixelSize: 12 * hero.s; bold: true; family: "Sans" }
+                            font { pixelSize: 11 * hero.s; bold: true; family: "Sans" }
                             horizontalAlignment: Text.AlignHCenter
                             color: "#D9DEE5"
                         }
@@ -291,7 +291,8 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: 24 * hero.s
+        anchors.bottomMargin: workspaceModel.count > 0
+            ? workspaceRowItem.height + 36 * hero.s : 24 * hero.s
         height: 164 * hero.s
 
         Text {
@@ -306,7 +307,7 @@ Item {
         ListView {
             id: recentList
             anchors.top: recentTitle.bottom
-            anchors.topMargin: 9 * hero.s
+            anchors.topMargin: 8 * hero.s
             anchors.horizontalCenter: parent.horizontalCenter
             width: Math.min(parent.width - 100 * hero.s,
                 Math.max(120 * hero.s, count * 130 * hero.s))
@@ -338,7 +339,16 @@ Item {
         }
     }
 
-    // Home/App Drawer boundary.
+    WorkspaceRow {
+        id: workspaceRowItem
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 24 * hero.s
+        workspaceModel: workspaceModel
+        isActiveRow: hero.workspaceActive
+    }
+
     Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right

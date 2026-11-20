@@ -32,7 +32,9 @@ Item {
         let cmd = rowAppsModel.execCmdAt(currentCardIndex);
         let did = rowAppsModel.desktopIdAt(currentCardIndex);
         let wmc = rowAppsModel.wmClassAt(currentCardIndex);
-        if (cmd) appLauncher.launch(cmd, did, wmc);
+        let name = rowAppsModel.nameAt(currentCardIndex);
+        let icon = rowAppsModel.iconSourceAt(currentCardIndex);
+        if (cmd) appLauncher.launch(cmd, did, wmc, name, icon);
     }
 
     Text {
@@ -45,7 +47,6 @@ Item {
         text: row.rowCategoryName
         color: row.isActiveRow ? "#E8EAED" : "#6B7280"
         font { pixelSize: 18 * row.s; bold: true; family: "Sans"; capitalization: Font.AllUppercase; letterSpacing: 1.2 }
-
         Behavior on color { ColorAnimation { duration: 200 } }
     }
 
@@ -58,14 +59,12 @@ Item {
         anchors.right: parent.right
         anchors.rightMargin: 52 * row.s
         height: 200 * row.s
-
         orientation: ListView.Horizontal
         spacing: 18 * row.s
         interactive: true
         boundsBehavior: Flickable.StopAtBounds
         clip: false
         cacheBuffer: 3000
-
         model: row.rowAppsModel
 
         delegate: AppCard {
@@ -82,7 +81,6 @@ Item {
         }
 
         highlightFollowsCurrentItem: false
-
         Behavior on contentX {
             NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
         }

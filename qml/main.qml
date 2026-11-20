@@ -14,6 +14,7 @@ ApplicationWindow {
     title: "LauncherTV"
 
     property int currentRowIndex: 0
+    property int homeFocusIndex: 0
     readonly property int totalRows: 1 + rowRepeater.count
 
     Timer {
@@ -32,7 +33,13 @@ ApplicationWindow {
         }
     }
 
-    // ── Background layers ───────────────────────────────────────
+    Connections {
+        target: workspaceModel
+        function onCountChanged() {
+            if (workspaceModel.count === 0 && root.homeFocusIndex === 1)
+                root.homeFocusIndex = 0;
+        }
+    }
 
     property bool bgShowA: true
 
@@ -70,9 +77,8 @@ ApplicationWindow {
     function setBackground(src) {
         if (bgShowA) bgB.source = src; else bgA.source = src;
         bgShowA = !bgShowA;
-        if (appConfig.autoAccentColor) {
+        if (appConfig.autoAccentColor)
             appConfig.highlightColor = appConfig.colorFromImage(src);
-        }
     }
 
     property var bgImages: []
@@ -107,8 +113,6 @@ ApplicationWindow {
         function onConfigChanged() { reloadBackground(); }
     }
 
-    // ── Home + App Drawer share one scroll surface ──────────────
-
     FocusScope {
         id: mainFocus
         anchors.fill: parent
@@ -116,15 +120,11 @@ ApplicationWindow {
 
         Flickable {
             id: mainFlickable
-
-            // Safe Area remains a viewport margin only. The interactive
-            // focus hierarchy is not scaled or transformed.
             anchors.fill: parent
             anchors.leftMargin: root.width * appConfig.safeAreaLeft / 100
             anchors.rightMargin: root.width * appConfig.safeAreaRight / 100
             anchors.topMargin: root.height * appConfig.safeAreaTop / 100
             anchors.bottomMargin: root.height * appConfig.safeAreaBottom / 100
-
             contentHeight: mainColumn.implicitHeight
             clip: true
             interactive: true
@@ -139,12 +139,10 @@ ApplicationWindow {
                     id: heroWidget
                     width: parent.width
                     height: mainFlickable.height
-                    isActive: root.currentRowIndex === 0 && !settingsPage.visible
+                    isActive: root.currentRowIndex === 0 && root.homeFocusIndex === 0 && !settingsPage.visible
+                    workspaceActive: root.currentRowIndex === 0 && root.homeFocusIndex === 1 && !settingsPage.visible
                 }
 
-                // Reserve one complete viewport for the drawer. This gives
-                // the first category enough scroll range to move Home fully
-                // off-screen even when there are only a few app categories.
                 Item {
                     id: drawerPage
                     width: parent.width
@@ -182,7 +180,10 @@ ApplicationWindow {
         Keys.onPressed: function(event) {
             switch (event.key) {
             case Qt.Key_Up:
-                if (root.currentRowIndex > 0) {
+                if (root.currentRowIndex === 0) {
+                    if (root.homeFocusIndex === 1)
+                        root.homeFocusIndex = 0;
+                } else if (root.currentRowIndex > 0) {
                     root.currentRowIndex--;
                     scrollToRow();
                 }
@@ -190,7 +191,14 @@ ApplicationWindow {
                 break;
 
             case Qt.Key_Down:
-                if (root.currentRowIndex < root.totalRows - 1) {
+                if (root.currentRowIndex === 0) {
+                    if (root.homeFocusIndex === 0 && workspaceModel.count > 0) {
+                        root.homeFocusIndex = 1;
+                    } else if (root.totalRows > 1) {
+                        root.currentRowIndex = 1;
+                        scrollToRow();
+                    }
+                } else if (root.currentRowIndex < root.totalRows - 1) {
                     root.currentRowIndex++;
                     scrollToRow();
                 }
@@ -225,7 +233,8 @@ ApplicationWindow {
     }
 
     function getActiveRow() {
-        if (currentRowIndex === 0) return heroWidget;
+        if (currentRowIndex === 0)
+            return homeFocusIndex === 1 ? heroWidget.workspaceRow : heroWidget;
         return rowRepeater.itemAt(currentRowIndex - 1);
     }
 
@@ -244,18 +253,17 @@ ApplicationWindow {
         scrollAnim.start();
     }
 
-    // ── Floating settings button ────────────────────────────────
-
     Rectangle {
         anchors.bottom: parent.bottom
         anchors.right: parent.right
         anchors.bottomMargin: root.height * appConfig.safeAreaBottom / 100 + 18
         anchors.rightMargin: root.width * appConfig.safeAreaRight / 100 + 24
-        width: 48; height: 48; radius: 24
+        width: 48
+        height: 48
+        radius: 24
         color: settingsBtn.containsMouse ? "#40FFFFFF" : "#22FFFFFF"
         z: 50
         visible: !settingsPage.visible
-
         Behavior on color { ColorAnimation { duration: 150 } }
 
         Text {
@@ -274,14 +282,11 @@ ApplicationWindow {
         }
     }
 
-    // ── Settings overlay ────────────────────────────────────────
-
     SettingsPage {
         id: settingsPage
         anchors.fill: parent
         visible: false
         z: 100
-
         onVisibleChanged: {
             if (visible) settingsPage.forceActiveFocus();
             else mainFocus.forceActiveFocus();
@@ -294,9 +299,8 @@ ApplicationWindow {
     }
 
     onActiveChanged: {
-        if (!active) {
+        if (!active)
             appLauncher.loadingId = "";
-        }
         if (active) {
             if (settingsPage.visible) settingsPage.forceActiveFocus();
             else mainFocus.forceActiveFocus();
