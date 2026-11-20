@@ -47,9 +47,10 @@ Item {
         id: title
         anchors.top: parent.top
         anchors.left: parent.left
-        anchors.leftMargin: -8 * row.s
+        width: 94 * row.s
         text: "RESUME"
         height: 20 * row.s
+        horizontalAlignment: Text.AlignHCenter
         z: 2
         color: row.isActiveRow ? "#F2F4F7" : "#C4CCD6"
         font { pixelSize: 16 * row.s; bold: true; family: "Sans"; letterSpacing: 1.8 }
