@@ -54,42 +54,48 @@ Item {
         if (cmd) appLauncher.launch(cmd, did, wmc, name, icon);
     }
 
-    // ── Clock ───────────────────────────────────────────────────
+    // ── Clock + current weather ─────────────────────────────────
 
-    Column {
-        id: topStack
+    Item {
+        id: topInfoArea
         anchors.top: parent.top
-        anchors.topMargin: 18 * hero.s
-        anchors.horizontalCenter: parent.horizontalCenter
-        spacing: 2 * hero.s
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.topMargin: 10 * hero.s
+        height: 210 * hero.s
 
-        Text {
-            id: dateLine
-            anchors.horizontalCenter: parent.horizontalCenter
-            font { pixelSize: 17 * hero.s; family: "Sans"; letterSpacing: 0.8 }
-            color: "#C7CDD5"
+        Column {
+            id: clockColumn
+            anchors.left: parent.left
+            anchors.leftMargin: 28 * hero.s
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: -14 * hero.s
 
-            Timer {
-                running: true
-                repeat: true
-                interval: 60000
-                triggeredOnStart: true
-                onTriggered: {
-                    let d = new Date();
-                    let days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-                    let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                    dateLine.text = days[d.getDay()] + ", " + months[d.getMonth()] + " " + d.getDate();
+            Text {
+                id: dateLine
+                anchors.horizontalCenter: parent.horizontalCenter
+                font { pixelSize: 19 * hero.s; family: "Sans" }
+                color: "#E8E4DC"
+                bottomPadding: 12 * hero.s
+
+                Timer {
+                    running: true
+                    repeat: true
+                    interval: 60000
+                    triggeredOnStart: true
+                    onTriggered: {
+                        let d = new Date();
+                        let days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+                        let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                        dateLine.text = days[d.getDay()] + ", " + months[d.getMonth()] + " " + d.getDate();
+                    }
                 }
             }
-        }
-
-        Row {
-            anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 12 * hero.s
 
             Text {
                 id: hoursBlock
-                font { pixelSize: 78 * hero.s; bold: true; family: "Sans" }
+                anchors.horizontalCenter: parent.horizontalCenter
+                font { pixelSize: 96 * hero.s; bold: true; family: "Sans" }
                 color: "#F5F0E6"
                 Timer {
                     running: true
@@ -104,15 +110,9 @@ Item {
             }
 
             Text {
-                text: ":"
-                font { pixelSize: 72 * hero.s; bold: true; family: "Sans" }
-                color: "#87909B"
-                anchors.verticalCenter: parent.verticalCenter
-            }
-
-            Text {
                 id: minsBlock
-                font { pixelSize: 78 * hero.s; bold: true; family: "Sans" }
+                anchors.horizontalCenter: parent.horizontalCenter
+                font { pixelSize: 96 * hero.s; bold: true; family: "Sans" }
                 color: "#F5F0E6"
                 Timer {
                     running: true
@@ -127,14 +127,19 @@ Item {
             }
         }
 
-        // Current weather and location are kept together below the clock.
         Row {
-            anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 16 * hero.s
+            id: currentWeather
+            anchors.left: clockColumn.right
+            anchors.leftMargin: 22 * hero.s
+            anchors.right: parent.right
+            anchors.rightMargin: 24 * hero.s
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 12 * hero.s
 
             Image {
-                width: 62 * hero.s
-                height: 62 * hero.s
+                width: 72 * hero.s
+                height: 72 * hero.s
+                anchors.verticalCenter: parent.verticalCenter
                 source: weather.icon
                 sourceSize: Qt.size(128, 128)
                 fillMode: Image.PreserveAspectFit
@@ -144,39 +149,41 @@ Item {
 
             Column {
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 1 * hero.s
+                spacing: 2 * hero.s
 
                 Text {
                     text: weather.temperature
-                    font { pixelSize: 32 * hero.s; bold: true; family: "Sans" }
+                    font { pixelSize: 48 * hero.s; bold: true; family: "Sans" }
                     color: "#FFFFFF"
                 }
 
                 Text {
                     text: weather.condition
-                    font { pixelSize: 15 * hero.s; family: "Sans" }
+                    font { pixelSize: 17 * hero.s; family: "Sans" }
                     color: "#B0B8C1"
+                    elide: Text.ElideRight
+                    width: currentWeather.width - 84 * hero.s
                 }
 
                 Text {
                     text: weather.location || "—"
-                    font { pixelSize: 13 * hero.s; bold: true; family: "Sans" }
-                    color: "#8794A4"
+                    font { pixelSize: 27 * hero.s; bold: true; family: "Sans" }
+                    color: "#FFFFFF"
                     elide: Text.ElideRight
-                    width: 230 * hero.s
+                    width: currentWeather.width - 84 * hero.s
                 }
             }
         }
     }
 
-    // ── Five-day forecast ───────────────────────────────────────
+    // ── Five-day forecast stays intact, moved below clock/weather ─
 
     Item {
         id: forecastArea
-        width: Math.min(parent.width - 120 * hero.s, 610 * hero.s)
+        width: Math.min(parent.width - 100 * hero.s, 610 * hero.s)
         height: 92 * hero.s
-        anchors.top: topStack.bottom
-        anchors.topMargin: 1 * hero.s
+        anchors.top: topInfoArea.bottom
+        anchors.topMargin: 3 * hero.s
         anchors.horizontalCenter: parent.horizontalCenter
 
         Canvas {
@@ -284,70 +291,92 @@ Item {
         }
     }
 
-    // ── Recent Apps ─────────────────────────────────────────────
+    // ── Resume + Most used share one horizontal strip ────────────
 
     Item {
-        id: recentArea
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: workspaceModel.count > 0
-            ? workspaceRowItem.height + 36 * hero.s : 24 * hero.s
-        height: 164 * hero.s
-
-        Text {
-            id: recentTitle
-            anchors.top: parent.top
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: "RECENT APPS"
-            font { pixelSize: 13 * hero.s; bold: true; family: "Sans"; letterSpacing: 2.0 }
-            color: hero.isActive ? "#DDE5EF" : "#8A95A3"
-        }
-
-        ListView {
-            id: recentList
-            anchors.top: recentTitle.bottom
-            anchors.topMargin: 8 * hero.s
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.min(parent.width - 100 * hero.s,
-                Math.max(120 * hero.s, count * 130 * hero.s))
-            height: 136 * hero.s
-            orientation: ListView.Horizontal
-            spacing: 14 * hero.s
-            interactive: true
-            boundsBehavior: Flickable.StopAtBounds
-            clip: false
-            cacheBuffer: 2000
-            model: mostUsedModel
-
-            delegate: AppCard {
-                width: 116 * hero.s
-                height: 128 * hero.s
-                appName: model.name
-                appIconSource: model.iconSource
-                isFocused: hero.isActive && (index === hero.currentCardIndex)
-                isLoading: model.desktopId === appLauncher.loadingId
-                onClicked: {
-                    hero.currentCardIndex = index;
-                    hero.activate();
-                }
-            }
-
-            Behavior on contentX {
-                NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
-            }
-        }
-    }
-
-    WorkspaceRow {
-        id: workspaceRowItem
+        id: bottomAppsArea
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 24 * hero.s
-        modelObject: workspaceModel
-        scaleFactor: hero.s
-        isActiveRow: hero.workspaceActive
+        height: 164 * hero.s
+
+        WorkspaceRow {
+            id: workspaceRowItem
+            anchors.left: parent.left
+            anchors.leftMargin: 22 * hero.s
+            anchors.top: parent.top
+            width: workspaceModel.count > 0 ? Math.min(parent.width * 0.30, 190 * hero.s) : 0
+            height: parent.height
+            modelObject: workspaceModel
+            scaleFactor: hero.s
+            isActiveRow: hero.workspaceActive
+        }
+
+        Rectangle {
+            id: workspaceDivider
+            visible: workspaceModel.count > 0
+            anchors.left: workspaceRowItem.right
+            anchors.leftMargin: 8 * hero.s
+            anchors.verticalCenter: parent.verticalCenter
+            width: 1
+            height: 116 * hero.s
+            color: "#66717F"
+            opacity: 0.55
+        }
+
+        Item {
+            id: recentArea
+            anchors.left: workspaceModel.count > 0
+                ? workspaceDivider.right : parent.left
+            anchors.leftMargin: workspaceModel.count > 0 ? 14 * hero.s : 24 * hero.s
+            anchors.right: parent.right
+            anchors.rightMargin: 18 * hero.s
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+
+            Text {
+                id: recentTitle
+                anchors.top: parent.top
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "MOST USED"
+                font { pixelSize: 13 * hero.s; bold: true; family: "Sans"; letterSpacing: 2.0 }
+                color: hero.isActive ? "#DDE5EF" : "#8A95A3"
+            }
+
+            ListView {
+                id: recentList
+                anchors.top: recentTitle.bottom
+                anchors.topMargin: 8 * hero.s
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 136 * hero.s
+                orientation: ListView.Horizontal
+                spacing: 12 * hero.s
+                interactive: true
+                boundsBehavior: Flickable.StopAtBounds
+                clip: false
+                cacheBuffer: 2000
+                model: mostUsedModel
+
+                delegate: AppCard {
+                    width: workspaceModel.count > 0 ? 94 * hero.s : 116 * hero.s
+                    height: workspaceModel.count > 0 ? 112 * hero.s : 128 * hero.s
+                    appName: model.name
+                    appIconSource: model.iconSource
+                    isFocused: hero.isActive && (index === hero.currentCardIndex)
+                    isLoading: model.desktopId === appLauncher.loadingId
+                    onClicked: {
+                        hero.currentCardIndex = index;
+                        hero.activate();
+                    }
+                }
+
+                Behavior on contentX {
+                    NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
+                }
+            }
+        }
     }
 
     Rectangle {
