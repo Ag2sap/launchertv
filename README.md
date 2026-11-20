@@ -101,6 +101,8 @@ LauncherTV/
 
 All settings are stored in `~/.config/LauncherTV/config.json` and can be edited via the built-in Settings panel.
 
+The RCA overscan-safe launcher content uses the `safeAreaScale` setting (default `0.88`). It uniformly scales the interactive launcher UI around the display center while keeping the wallpaper/background full-screen. Values are currently clamped between `0.70` and `1.00`; calibration can be adjusted in `~/.config/LauncherTV/config.json`. This setting is separate from the existing `scale` preference for individual UI sizing.
+
 ## Author
 
 **Diego Martinez Fernandez** — [@Dgmtnz](https://github.com/Dgmtnz)
