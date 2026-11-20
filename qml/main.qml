@@ -180,8 +180,9 @@ ApplicationWindow {
         Keys.onPressed: function(event) {
             switch (event.key) {
             case Qt.Key_Up:
-                if (root.currentRowIndex === 0 && root.homeFocusIndex === 0) {
-                    heroWidget.workspaceRow.moveUp();
+                if (root.currentRowIndex === 0 && root.homeFocusIndex === 1
+                        && workspaceModel.count > 0) {
+                    root.homeFocusIndex = 0;
                 } else if (root.currentRowIndex > 0) {
                     root.currentRowIndex--;
                     scrollToRow();
@@ -192,7 +193,7 @@ ApplicationWindow {
             case Qt.Key_Down:
                 if (root.currentRowIndex === 0) {
                     if (root.homeFocusIndex === 0 && workspaceModel.count > 0) {
-                        heroWidget.workspaceRow.moveDown();
+                        root.homeFocusIndex = 1;
                     } else if (root.totalRows > 1) {
                         root.currentRowIndex = 1;
                         scrollToRow();
@@ -216,12 +217,8 @@ ApplicationWindow {
                 break;
             }
             case Qt.Key_Right: {
-                if (root.currentRowIndex === 0 && root.homeFocusIndex === 0) {
-                    root.homeFocusIndex = 1;
-                } else {
-                    let r = getActiveRow();
-                    if (r) r.moveRight();
-                }
+                let r = getActiveRow();
+                if (r) r.moveRight();
                 event.accepted = true;
                 break;
             }
