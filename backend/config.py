@@ -13,6 +13,10 @@ PROJECT_DIR = Path(__file__).resolve().parent.parent
 
 DEFAULTS = {
     "scale": 1.0,
+    "safeAreaLeft": 5.0,
+    "safeAreaRight": 5.0,
+    "safeAreaTop": 5.0,
+    "safeAreaBottom": 5.0,
     "highlightColor": "#5EB8FF",
     "autoAccentColor": False,
     "backgroundTint": 0.75,
@@ -63,6 +67,38 @@ class AppConfig(QObject):
         self._set("scale", round(max(0.5, min(2.0, v)), 2))
 
     scale = Property(float, _get_scale, _set_scale, notify=configChanged)
+
+    def _get_safe_area_left(self):
+        return float(self._data.get("safeAreaLeft", 5.0))
+
+    def _set_safe_area_left(self, v):
+        self._set("safeAreaLeft", round(max(0.0, min(20.0, v)), 2))
+
+    safeAreaLeft = Property(float, _get_safe_area_left, _set_safe_area_left, notify=configChanged)
+
+    def _get_safe_area_right(self):
+        return float(self._data.get("safeAreaRight", 5.0))
+
+    def _set_safe_area_right(self, v):
+        self._set("safeAreaRight", round(max(0.0, min(20.0, v)), 2))
+
+    safeAreaRight = Property(float, _get_safe_area_right, _set_safe_area_right, notify=configChanged)
+
+    def _get_safe_area_top(self):
+        return float(self._data.get("safeAreaTop", 5.0))
+
+    def _set_safe_area_top(self, v):
+        self._set("safeAreaTop", round(max(0.0, min(20.0, v)), 2))
+
+    safeAreaTop = Property(float, _get_safe_area_top, _set_safe_area_top, notify=configChanged)
+
+    def _get_safe_area_bottom(self):
+        return float(self._data.get("safeAreaBottom", 5.0))
+
+    def _set_safe_area_bottom(self, v):
+        self._set("safeAreaBottom", round(max(0.0, min(20.0, v)), 2))
+
+    safeAreaBottom = Property(float, _get_safe_area_bottom, _set_safe_area_bottom, notify=configChanged)
 
     def _get_highlight(self):
         return self._data.get("highlightColor", "#5EB8FF")
@@ -142,15 +178,15 @@ class AppConfig(QObject):
                 AUTOSTART_DIR.mkdir(parents=True, exist_ok=True)
                 main_py = PROJECT_DIR / "main.py"
                 AUTOSTART_FILE.write_text(
-                    "[Desktop Entry]\n"
-                    "Type=Application\n"
-                    "Name=LauncherTV\n"
-                    "Comment=Android TV-style launcher for Linux\n"
-                    f"Exec=python3 {main_py}\n"
-                    "Icon=preferences-desktop\n"
-                    "Terminal=false\n"
-                    "Categories=System;\n"
-                    "StartupWMClass=LauncherTV\n"
+                    "[Desktop Entry]\\n"
+                    "Type=Application\\n"
+                    "Name=LauncherTV\\n"
+                    "Comment=Android TV-style launcher for Linux\\n"
+                    f"Exec=python3 {main_py}\\n"
+                    "Icon=preferences-desktop\\n"
+                    "Terminal=false\\n"
+                    "Categories=System;\\n"
+                    "StartupWMClass=LauncherTV\\n"
                 )
             else:
                 AUTOSTART_FILE.unlink(missing_ok=True)
