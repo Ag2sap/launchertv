@@ -4,22 +4,26 @@ import time
 import urllib.parse
 import urllib.request
 from datetime import date
+from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal, Slot, Property, QTimer
 
 _DAY_ABBR = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+_ASSET_DIR = Path(__file__).resolve().parent.parent / "assets" / "weather"
 
+# WMO weather codes are mapped to bundled SVG assets. This avoids depending
+# on emoji glyph coverage in the TV image's system fonts.
 WMO_ICONS = {
-    0: "☀️", 1: "🌤️", 2: "⛅", 3: "☁️",
-    45: "🌫️", 48: "🌫️",
-    51: "🌦️", 53: "🌦️", 55: "🌦️",
-    56: "🌨️", 57: "🌨️",
-    61: "🌧️", 63: "🌧️", 65: "🌧️",
-    66: "🌨️", 67: "🌨️",
-    71: "❄️", 73: "❄️", 75: "❄️", 77: "❄️",
-    80: "🌧️", 81: "🌧️", 82: "🌧️",
-    85: "❄️", 86: "❄️",
-    95: "⛈️", 96: "⛈️", 99: "⛈️",
+    0: "clear", 1: "partly-cloudy", 2: "partly-cloudy", 3: "cloudy",
+    45: "fog", 48: "fog",
+    51: "drizzle", 53: "drizzle", 55: "drizzle",
+    56: "snow", 57: "snow",
+    61: "rain", 63: "rain", 65: "rain",
+    66: "snow", 67: "snow",
+    71: "snow", 73: "snow", 75: "snow", 77: "snow",
+    80: "rain", 81: "rain", 82: "rain",
+    85: "snow", 86: "snow",
+    95: "thunderstorm", 96: "thunderstorm", 99: "thunderstorm",
 }
 
 WMO_DESCRIPTIONS = {
@@ -34,6 +38,12 @@ WMO_DESCRIPTIONS = {
     85: "Light snow showers", 86: "Heavy snow showers",
     95: "Thunderstorm", 96: "Thunderstorm with hail", 99: "Heavy hail storm",
 }
+
+
+def _icon_source(code):
+    name = WMO_ICONS.get(code, "cloudy")
+    return (_ASSET_DIR / f"{name}.svg").as_uri()
+
 
 MAX_RETRIES = 3
 RETRY_DELAY = 300
@@ -87,7 +97,7 @@ class WeatherProvider(QObject):
         self._temp = "--°C"
         self._feels = "--°C"
         self._condition = "Loading…"
-        self._icon = "☁️"
+        self._icon = _icon_source(-1)
         self._location = location or ""
         self._lat = None
         self._lon = None
@@ -157,7 +167,7 @@ class WeatherProvider(QObject):
                     "min": mn,
                     "max": mx,
                     "rain": int(r),
-                    "icon": WMO_ICONS.get(code, "☁️"),
+                    "icon": _icon_source(code),
                 }
             )
         return out
@@ -220,7 +230,7 @@ class WeatherProvider(QObject):
             self._temp = f"{temp:.0f}°C" if temp is not None else "--°C"
             self._feels = f"{feels:.0f}°C" if feels is not None else "--°C"
             self._condition = WMO_DESCRIPTIONS.get(code, "Unknown")
-            self._icon = WMO_ICONS.get(code, "☁️")
+            self._icon = _icon_source(code)
             daily = data.get("daily")
             if daily:
                 self._forecast_json = json.dumps(self._build_forecast(daily))

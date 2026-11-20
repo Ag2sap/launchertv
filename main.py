@@ -19,6 +19,7 @@ from backend.models import (
     get_most_used_apps,
 )
 from backend.weather import WeatherProvider
+from backend.workspace import WorkspaceModel
 from backend.x11 import activate_by_name
 
 
@@ -39,8 +40,9 @@ def main():
     category_model.load_from(all_apps)
 
     most_used_model = AppListModel(get_most_used_apps(all_apps, config))
-
     launcher = AppLauncher()
+    workspace_model = WorkspaceModel()
+    launcher.sessionDetected.connect(workspace_model.registerSession)
 
     def on_launched(desktop_id: str):
         config.recordLaunch(desktop_id)
@@ -56,6 +58,7 @@ def main():
     ctx.setContextProperty("mostUsedModel", most_used_model)
     ctx.setContextProperty("appLauncher", launcher)
     ctx.setContextProperty("weather", weather)
+    ctx.setContextProperty("workspaceModel", workspace_model)
 
     qml_path = Path(__file__).resolve().parent / "qml" / "main.qml"
     engine.load(QUrl.fromLocalFile(str(qml_path)))
@@ -63,9 +66,7 @@ def main():
     if not engine.rootObjects():
         sys.exit(1)
 
-    # ── Home key (Menu key) ───────────────────────────────────
     grab_state = [config.grabHomeKey]
-
     if grab_state[0]:
         apply_key_grab(True)
 
@@ -78,7 +79,6 @@ def main():
             apply_key_grab(new)
 
     config.configChanged.connect(on_config_changed)
-
     HomeKeyDaemon(lambda: activate_by_name("LauncherTV")).start()
 
     sys.exit(app.exec())

@@ -14,6 +14,7 @@ ApplicationWindow {
     title: "LauncherTV"
 
     property int currentRowIndex: 0
+    property int homeFocusIndex: 1
     readonly property int totalRows: 1 + rowRepeater.count
 
     Timer {
@@ -32,7 +33,13 @@ ApplicationWindow {
         }
     }
 
-    // ── Background layers ───────────────────────────────────────
+    Connections {
+        target: workspaceModel
+        function onCountChanged() {
+            if (workspaceModel.count === 0 && root.homeFocusIndex === 0)
+                root.homeFocusIndex = 1;
+        }
+    }
 
     property bool bgShowA: true
 
@@ -70,9 +77,8 @@ ApplicationWindow {
     function setBackground(src) {
         if (bgShowA) bgB.source = src; else bgA.source = src;
         bgShowA = !bgShowA;
-        if (appConfig.autoAccentColor) {
+        if (appConfig.autoAccentColor)
             appConfig.highlightColor = appConfig.colorFromImage(src);
-        }
     }
 
     property var bgImages: []
@@ -107,8 +113,6 @@ ApplicationWindow {
         function onConfigChanged() { reloadBackground(); }
     }
 
-    // ── Main content ────────────────────────────────────────────
-
     FocusScope {
         id: mainFocus
         anchors.fill: parent
@@ -117,7 +121,11 @@ ApplicationWindow {
         Flickable {
             id: mainFlickable
             anchors.fill: parent
-            contentHeight: mainColumn.height + 40
+            anchors.leftMargin: root.width * appConfig.safeAreaLeft / 100
+            anchors.rightMargin: root.width * appConfig.safeAreaRight / 100
+            anchors.topMargin: root.height * appConfig.safeAreaTop / 100
+            anchors.bottomMargin: root.height * appConfig.safeAreaBottom / 100
+            contentHeight: mainColumn.implicitHeight
             clip: true
             interactive: true
             boundsBehavior: Flickable.StopAtBounds
@@ -130,20 +138,32 @@ ApplicationWindow {
                 HeroWidget {
                     id: heroWidget
                     width: parent.width
-                    height: 374 * appConfig.scale
-                    isActive: root.currentRowIndex === 0 && !settingsPage.visible
+                    height: mainFlickable.height
+                    isActive: root.currentRowIndex === 0 && root.homeFocusIndex === 1 && !settingsPage.visible
+                    workspaceActive: root.currentRowIndex === 0 && root.homeFocusIndex === 0 && !settingsPage.visible
                 }
 
-                Repeater {
-                    id: rowRepeater
-                    model: categoryModel
+                Item {
+                    id: drawerPage
+                    width: parent.width
+                    height: Math.max(mainFlickable.height, drawerColumn.implicitHeight)
 
-                    AppRow {
-                        width: mainColumn.width
-                        rowCategoryName: model.categoryName
-                        rowAppsModel: model.appsModel
-                        rowAppCount: model.appCount
-                        isActiveRow: (index + 1) === root.currentRowIndex && !settingsPage.visible
+                    Column {
+                        id: drawerColumn
+                        width: parent.width
+
+                        Repeater {
+                            id: rowRepeater
+                            model: categoryModel
+
+                            AppRow {
+                                width: drawerColumn.width
+                                rowCategoryName: model.categoryName
+                                rowAppsModel: model.appsModel
+                                rowAppCount: model.appCount
+                                isActiveRow: (index + 1) === root.currentRowIndex && !settingsPage.visible
+                            }
+                        }
                     }
                 }
             }
@@ -153,14 +173,17 @@ ApplicationWindow {
             id: scrollAnim
             target: mainFlickable
             property: "contentY"
-            duration: 320
+            duration: 420
             easing.type: Easing.OutCubic
         }
 
         Keys.onPressed: function(event) {
             switch (event.key) {
             case Qt.Key_Up:
-                if (root.currentRowIndex > 0) {
+                if (root.currentRowIndex === 0 && root.homeFocusIndex === 1
+                        && workspaceModel.count > 0) {
+                    root.homeFocusIndex = 0;
+                } else if (root.currentRowIndex > 0) {
                     root.currentRowIndex--;
                     scrollToRow();
                 }
@@ -168,7 +191,14 @@ ApplicationWindow {
                 break;
 
             case Qt.Key_Down:
-                if (root.currentRowIndex < root.totalRows - 1) {
+                if (root.currentRowIndex === 0) {
+                    if (root.homeFocusIndex === 0 && workspaceModel.count > 0) {
+                        root.homeFocusIndex = 1;
+                    } else if (root.totalRows > 1) {
+                        root.currentRowIndex = 1;
+                        scrollToRow();
+                    }
+                } else if (root.currentRowIndex < root.totalRows - 1) {
                     root.currentRowIndex++;
                     scrollToRow();
                 }
@@ -176,8 +206,13 @@ ApplicationWindow {
                 break;
 
             case Qt.Key_Left: {
-                let r = getActiveRow();
-                if (r) r.moveLeft();
+                if (root.currentRowIndex === 0 && root.homeFocusIndex === 1
+                        && heroWidget.currentCardIndex === 0 && workspaceModel.count > 0) {
+                    root.homeFocusIndex = 0;
+                } else {
+                    let r = getActiveRow();
+                    if (r) r.moveLeft();
+                }
                 event.accepted = true;
                 break;
             }
@@ -203,33 +238,37 @@ ApplicationWindow {
     }
 
     function getActiveRow() {
-        if (currentRowIndex === 0) return heroWidget;
+        if (currentRowIndex === 0)
+            return homeFocusIndex === 0 ? heroWidget.workspaceRow : heroWidget;
         return rowRepeater.itemAt(currentRowIndex - 1);
     }
 
     function scrollToRow() {
-        let row = getActiveRow();
-        if (!row) return;
-        let targetY = row.y - 20;
-        targetY = Math.max(0, Math.min(targetY, mainFlickable.contentHeight - mainFlickable.height));
+        let targetY = 0;
+        if (currentRowIndex > 0) {
+            let row = rowRepeater.itemAt(currentRowIndex - 1);
+            if (!row) return;
+            targetY = heroWidget.height + row.y;
+        }
+        targetY = Math.max(0, Math.min(targetY,
+            mainFlickable.contentHeight - mainFlickable.height));
         scrollAnim.stop();
         scrollAnim.from = mainFlickable.contentY;
         scrollAnim.to = targetY;
         scrollAnim.start();
     }
 
-    // ── Floating settings button ────────────────────────────────
-
     Rectangle {
         anchors.bottom: parent.bottom
         anchors.right: parent.right
-        anchors.bottomMargin: 18
-        anchors.rightMargin: 24
-        width: 48; height: 48; radius: 24
+        anchors.bottomMargin: root.height * appConfig.safeAreaBottom / 100 + 18
+        anchors.rightMargin: root.width * appConfig.safeAreaRight / 100 + 24
+        width: 48
+        height: 48
+        radius: 24
         color: settingsBtn.containsMouse ? "#40FFFFFF" : "#22FFFFFF"
         z: 50
         visible: !settingsPage.visible
-
         Behavior on color { ColorAnimation { duration: 150 } }
 
         Text {
@@ -248,14 +287,11 @@ ApplicationWindow {
         }
     }
 
-    // ── Settings overlay ────────────────────────────────────────
-
     SettingsPage {
         id: settingsPage
         anchors.fill: parent
         visible: false
         z: 100
-
         onVisibleChanged: {
             if (visible) settingsPage.forceActiveFocus();
             else mainFocus.forceActiveFocus();
@@ -268,9 +304,8 @@ ApplicationWindow {
     }
 
     onActiveChanged: {
-        if (!active) {
+        if (!active)
             appLauncher.loadingId = "";
-        }
         if (active) {
             if (settingsPage.visible) settingsPage.forceActiveFocus();
             else mainFocus.forceActiveFocus();
