@@ -9,7 +9,7 @@ Item {
     readonly property real s: Math.min(appConfig.scale, Math.max(0.65, height / 650))
     readonly property real clockScale: appConfig.scale
     property var forecastDays: []
-    property alias workspaceRow: workspaceRowItem
+    property alias workspaceRow: resumeRow
 
     function syncForecast() {
         try {
