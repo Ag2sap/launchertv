@@ -116,7 +116,15 @@ ApplicationWindow {
 
         Flickable {
             id: mainFlickable
+
+            // Keep the original focus hierarchy intact. Safe Area is applied
+            // to the viewport geometry only; no parent scaling or transforms.
             anchors.fill: parent
+            anchors.leftMargin: root.width * appConfig.safeAreaLeft / 100
+            anchors.rightMargin: root.width * appConfig.safeAreaRight / 100
+            anchors.topMargin: root.height * appConfig.safeAreaTop / 100
+            anchors.bottomMargin: root.height * appConfig.safeAreaBottom / 100
+
             contentHeight: mainColumn.height + 40
             clip: true
             interactive: true
@@ -223,8 +231,8 @@ ApplicationWindow {
     Rectangle {
         anchors.bottom: parent.bottom
         anchors.right: parent.right
-        anchors.bottomMargin: 18
-        anchors.rightMargin: 24
+        anchors.bottomMargin: root.height * appConfig.safeAreaBottom / 100 + 18
+        anchors.rightMargin: root.width * appConfig.safeAreaRight / 100 + 24
         width: 48; height: 48; radius: 24
         color: settingsBtn.containsMouse ? "#40FFFFFF" : "#22FFFFFF"
         z: 50
