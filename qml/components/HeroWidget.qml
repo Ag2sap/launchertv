@@ -7,6 +7,7 @@ Item {
     property bool workspaceActive: false
     property int currentCardIndex: 0
     readonly property real s: Math.min(appConfig.scale, Math.max(0.65, height / 650))
+    readonly property real clockScale: appConfig.scale
     property var forecastDays: []
     property alias workspaceRow: workspaceRowItem
 
@@ -62,21 +63,21 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.topMargin: 10 * hero.s
-        height: 210 * hero.s
+        height: 210 * hero.clockScale
 
         Column {
             id: clockColumn
             anchors.left: parent.left
             anchors.leftMargin: 28 * hero.s
             anchors.verticalCenter: parent.verticalCenter
-            spacing: -14 * hero.s
+            spacing: -14 * hero.clockScale
 
             Text {
                 id: dateLine
                 anchors.horizontalCenter: parent.horizontalCenter
-                font { pixelSize: 19 * hero.s; family: "Sans" }
+                font { pixelSize: 19 * hero.clockScale; family: "Sans" }
                 color: "#E8E4DC"
-                bottomPadding: 12 * hero.s
+                bottomPadding: 12 * hero.clockScale
 
                 Timer {
                     running: true
@@ -95,7 +96,7 @@ Item {
             Text {
                 id: hoursBlock
                 anchors.horizontalCenter: parent.horizontalCenter
-                font { pixelSize: 96 * hero.s; bold: true; family: "Sans" }
+                font { pixelSize: 96 * hero.clockScale; bold: true; family: "Sans" }
                 color: "#F5F0E6"
                 Timer {
                     running: true
@@ -167,7 +168,7 @@ Item {
 
                 Text {
                     text: weather.location || "—"
-                    font { pixelSize: 27 * hero.s; bold: true; family: "Sans" }
+                    font { pixelSize: 33 * hero.s; bold: true; family: "Sans" }
                     color: "#FFFFFF"
                     elide: Text.ElideRight
                     width: currentWeather.width - 84 * hero.s
