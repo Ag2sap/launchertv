@@ -17,7 +17,6 @@ class AppLauncher(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._loading_id = ""
-        AppLauncher._active_instance = self
 
     def _get_loading_id(self):
         return self._loading_id
@@ -86,9 +85,8 @@ class AppLauncher(QObject):
         except FileNotFoundError:
             self._set_loading_id("")
 
-    @staticmethod
     def _track_launched_windows(
-        pid, windows_before, desktop_id, app_name, icon_source, wm_class
+        self, pid, windows_before, desktop_id, app_name, icon_source, wm_class
     ):
         """Track only PID descendants or new windows matching the app class."""
         tracked = set()
@@ -122,12 +120,6 @@ class AppLauncher(QObject):
             time.sleep(0.2)
 
         if tracked:
-            self_payload = sorted(tracked)
-            # Emit through the QObject signal so the model updates on the GUI thread.
-            instance = AppLauncher._active_instance
-            if instance is not None:
-                instance.sessionDetected.emit(
-                    desktop_id, app_name, icon_source, pid, self_payload
-                )
-
-    _active_instance = None
+            self.sessionDetected.emit(
+                desktop_id, app_name, icon_source, pid, sorted(tracked)
+            )

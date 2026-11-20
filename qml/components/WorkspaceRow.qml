@@ -3,13 +3,13 @@ import QtQuick
 Item {
     id: row
 
-    property var workspaceModel: null
+    property var modelObject: null
     property bool isActiveRow: false
     property int currentCardIndex: 0
     readonly property real s: appConfig.scale
 
     height: 150 * s
-    visible: workspaceModel !== null && workspaceModel.count > 0
+    visible: modelObject !== null && modelObject.count > 0
 
     function moveLeft() {
         if (currentCardIndex > 0) {
@@ -19,15 +19,15 @@ Item {
     }
 
     function moveRight() {
-        if (workspaceModel && currentCardIndex < workspaceModel.count - 1) {
+        if (modelObject && currentCardIndex < modelObject.count - 1) {
             currentCardIndex++;
             cardList.positionViewAtIndex(currentCardIndex, ListView.Contain);
         }
     }
 
     function activate() {
-        if (workspaceModel && currentCardIndex >= 0)
-            workspaceModel.restoreAt(currentCardIndex);
+        if (modelObject && currentCardIndex >= 0)
+            modelObject.restoreAt(currentCardIndex);
     }
 
     Text {
@@ -54,7 +54,7 @@ Item {
         boundsBehavior: Flickable.StopAtBounds
         clip: false
         cacheBuffer: 2000
-        model: row.workspaceModel
+        model: row.modelObject
 
         delegate: AppCard {
             width: 116 * row.s

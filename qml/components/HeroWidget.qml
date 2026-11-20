@@ -345,7 +345,7 @@ Item {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 24 * hero.s
-        workspaceModel: workspaceModel
+        modelObject: workspaceModel
         isActiveRow: hero.workspaceActive
     }
 
