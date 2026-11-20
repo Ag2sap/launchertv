@@ -192,7 +192,7 @@ Item {
             id: resumeRow
             visible: workspaceModel.count > 0
             anchors.right: parent.right
-            anchors.rightMargin: 18 * hero.s
+            anchors.rightMargin: 28 * hero.s
             anchors.verticalCenter: parent.verticalCenter
             width: 204 * hero.s
             height: 142 * hero.s
