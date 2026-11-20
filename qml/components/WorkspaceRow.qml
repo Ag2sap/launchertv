@@ -46,7 +46,8 @@ Item {
     Text {
         id: title
         anchors.top: parent.top
-        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.left: parent.left
+        anchors.leftMargin: -8 * row.s
         text: "RESUME"
         height: 20 * row.s
         z: 2
