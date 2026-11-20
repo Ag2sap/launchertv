@@ -207,8 +207,7 @@ Item {
     Item {
         id: forecastArea
         x: topInfoArea.x + currentWeather.x
-        anchors.right: parent.right
-        anchors.rightMargin: 24 * hero.s
+        width: currentWeather.width
         height: 110 * hero.s
         anchors.top: topInfoArea.bottom
         anchors.topMargin: 3 * hero.s
