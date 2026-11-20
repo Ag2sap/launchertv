@@ -48,8 +48,10 @@ Item {
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
         text: "RESUME"
-        color: row.isActiveRow ? "#E8EAED" : "#8A95A3"
-        font { pixelSize: 13 * row.s; bold: true; family: "Sans"; letterSpacing: 1.5 }
+        height: 20 * row.s
+        z: 2
+        color: row.isActiveRow ? "#F2F4F7" : "#C4CCD6"
+        font { pixelSize: 16 * row.s; bold: true; family: "Sans"; letterSpacing: 1.8 }
         Behavior on color { ColorAnimation { duration: 180 } }
     }
 
@@ -60,6 +62,7 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         height: 112 * row.s
+        z: 1
         orientation: ListView.Horizontal
         spacing: 8 * row.s
         interactive: modelObject !== null && modelObject.count > 2
