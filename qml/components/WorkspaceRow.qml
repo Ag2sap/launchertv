@@ -9,21 +9,26 @@ Item {
     property real scaleFactor: 1.0
     readonly property real s: scaleFactor
 
-    height: 154 * s
-    visible: modelObject !== null && modelObject.count > 0
-
-    function moveLeft() {
+    function moveUp() {
         if (currentCardIndex > 0) {
             currentCardIndex--;
             cardList.positionViewAtIndex(currentCardIndex, ListView.Contain);
         }
     }
 
-    function moveRight() {
+    function moveDown() {
         if (modelObject && currentCardIndex < modelObject.count - 1) {
             currentCardIndex++;
             cardList.positionViewAtIndex(currentCardIndex, ListView.Contain);
         }
+    }
+
+    function moveLeft() {
+        // Resume is the leftmost Home column.
+    }
+
+    function moveRight() {
+        // The Home controller moves focus to Most used.
     }
 
     function activate() {
@@ -49,9 +54,9 @@ Item {
         id: title
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
-        text: "MINIMIZED WORKSPACE"
+        text: "RESUME"
         color: row.isActiveRow ? "#E8EAED" : "#8A95A3"
-        font { pixelSize: 13 * row.s; bold: true; family: "Sans"; letterSpacing: 2.0 }
+        font { pixelSize: 13 * row.s; bold: true; family: "Sans"; letterSpacing: 1.5 }
         Behavior on color { ColorAnimation { duration: 180 } }
     }
 
@@ -59,32 +64,71 @@ Item {
         id: cardList
         anchors.top: title.bottom
         anchors.topMargin: 7 * row.s
-        anchors.horizontalCenter: parent.horizontalCenter
-        width: Math.min(parent.width - 100 * row.s,
-            Math.max(120 * row.s, count * 130 * row.s))
-        height: 128 * row.s
-        orientation: ListView.Horizontal
-        spacing: 14 * row.s
-        interactive: true
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 3 * row.s
+        orientation: ListView.Vertical
+        spacing: 6 * row.s
+        interactive: modelObject !== null && modelObject.count > 2
         boundsBehavior: Flickable.StopAtBounds
-        clip: false
-        cacheBuffer: 2000
+        clip: true
+        cacheBuffer: 600
         model: row.modelObject
+        currentIndex: row.currentCardIndex
 
-        delegate: AppCard {
-            width: 116 * row.s
-            height: 128 * row.s
-            appName: model.name
-            appIconSource: model.iconSource
-            isFocused: row.isActiveRow && (index === row.currentCardIndex)
-            onClicked: {
-                row.currentCardIndex = index;
-                row.activate();
+        delegate: Item {
+            width: cardList.width
+            height: 49 * row.s
+
+            Rectangle {
+                anchors.fill: parent
+                radius: 8 * row.s
+                color: row.isActiveRow && index === row.currentCardIndex
+                    ? "#263447" : "#151A23"
+                border.width: row.isActiveRow && index === row.currentCardIndex ? 1.5 : 0
+                border.color: appConfig.highlightColor
+
+                Row {
+                    anchors.fill: parent
+                    anchors.leftMargin: 7 * row.s
+                    anchors.rightMargin: 5 * row.s
+                    spacing: 7 * row.s
+
+                    Image {
+                        width: 30 * row.s
+                        height: 30 * row.s
+                        anchors.verticalCenter: parent.verticalCenter
+                        source: model.iconSource
+                        sourceSize: Qt.size(64, 64)
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        asynchronous: true
+                    }
+
+                    Text {
+                        width: parent.width - 44 * row.s
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: model.name
+                        color: row.isActiveRow && index === row.currentCardIndex
+                            ? "#FFFFFF" : "#B0B8C1"
+                        font { pixelSize: 12 * row.s; bold: row.isActiveRow && index === row.currentCardIndex; family: "Sans" }
+                        elide: Text.ElideRight
+                    }
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    row.currentCardIndex = index;
+                    row.activate();
+                }
             }
         }
 
-        Behavior on contentX {
-            NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
+        Behavior on contentY {
+            NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
         }
     }
 }
