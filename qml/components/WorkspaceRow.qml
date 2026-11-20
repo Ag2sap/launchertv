@@ -30,6 +30,20 @@ Item {
             modelObject.restoreAt(currentCardIndex);
     }
 
+    Connections {
+        target: row.modelObject
+        function onCountChanged() {
+            if (!row.modelObject || row.modelObject.count === 0) {
+                row.currentCardIndex = 0;
+            } else {
+                row.currentCardIndex = Math.min(
+                    row.currentCardIndex, row.modelObject.count - 1
+                );
+                cardList.positionViewAtIndex(row.currentCardIndex, ListView.Contain);
+            }
+        }
+    }
+
     Text {
         id: title
         anchors.top: parent.top
