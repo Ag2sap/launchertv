@@ -14,7 +14,7 @@ ApplicationWindow {
     title: "LauncherTV"
 
     property int currentRowIndex: 0
-    property int homeFocusIndex: 0
+    property int homeFocusIndex: 1
     readonly property int totalRows: 1 + rowRepeater.count
 
     Timer {
@@ -139,8 +139,8 @@ ApplicationWindow {
                     id: heroWidget
                     width: parent.width
                     height: mainFlickable.height
-                    isActive: root.currentRowIndex === 0 && root.homeFocusIndex === 0 && !settingsPage.visible
-                    workspaceActive: root.currentRowIndex === 0 && root.homeFocusIndex === 1 && !settingsPage.visible
+                    isActive: root.currentRowIndex === 0 && root.homeFocusIndex === 1 && !settingsPage.visible
+                    workspaceActive: root.currentRowIndex === 0 && root.homeFocusIndex === 0 && !settingsPage.visible
                 }
 
                 Item {
@@ -180,9 +180,8 @@ ApplicationWindow {
         Keys.onPressed: function(event) {
             switch (event.key) {
             case Qt.Key_Up:
-                if (root.currentRowIndex === 0) {
-                    if (root.homeFocusIndex === 1)
-                        root.homeFocusIndex = 0;
+                if (root.currentRowIndex === 0 && root.homeFocusIndex === 0) {
+                    heroWidget.workspaceRow.moveUp();
                 } else if (root.currentRowIndex > 0) {
                     root.currentRowIndex--;
                     scrollToRow();
@@ -193,7 +192,7 @@ ApplicationWindow {
             case Qt.Key_Down:
                 if (root.currentRowIndex === 0) {
                     if (root.homeFocusIndex === 0 && workspaceModel.count > 0) {
-                        root.homeFocusIndex = 1;
+                        heroWidget.workspaceRow.moveDown();
                     } else if (root.totalRows > 1) {
                         root.currentRowIndex = 1;
                         scrollToRow();
@@ -206,14 +205,23 @@ ApplicationWindow {
                 break;
 
             case Qt.Key_Left: {
-                let r = getActiveRow();
-                if (r) r.moveLeft();
+                if (root.currentRowIndex === 0 && root.homeFocusIndex === 1
+                        && heroWidget.currentCardIndex === 0 && workspaceModel.count > 0) {
+                    root.homeFocusIndex = 0;
+                } else {
+                    let r = getActiveRow();
+                    if (r) r.moveLeft();
+                }
                 event.accepted = true;
                 break;
             }
             case Qt.Key_Right: {
-                let r = getActiveRow();
-                if (r) r.moveRight();
+                if (root.currentRowIndex === 0 && root.homeFocusIndex === 0) {
+                    root.homeFocusIndex = 1;
+                } else {
+                    let r = getActiveRow();
+                    if (r) r.moveRight();
+                }
                 event.accepted = true;
                 break;
             }
@@ -234,7 +242,7 @@ ApplicationWindow {
 
     function getActiveRow() {
         if (currentRowIndex === 0)
-            return homeFocusIndex === 1 ? heroWidget.workspaceRow : heroWidget;
+            return homeFocusIndex === 0 ? heroWidget.workspaceRow : heroWidget;
         return rowRepeater.itemAt(currentRowIndex - 1);
     }
 
