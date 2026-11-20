@@ -1,14 +1,11 @@
 import QtQuick
-import QtQuick.Layouts
 
 Item {
     id: hero
 
     property bool isActive: false
     property int currentCardIndex: 0
-
     readonly property real s: appConfig.scale
-
     property var forecastDays: []
 
     function syncForecast() {
@@ -17,7 +14,7 @@ Item {
         } catch (e) {
             forecastDays = [];
         }
-        trendCanvas.requestPaint();
+        forecastLine.requestPaint();
     }
 
     Connections {
@@ -27,7 +24,7 @@ Item {
 
     Connections {
         target: appConfig
-        function onConfigChanged() { trendCanvas.requestPaint(); }
+        function onConfigChanged() { forecastLine.requestPaint(); }
     }
 
     Component.onCompleted: hero.syncForecast()
@@ -35,14 +32,14 @@ Item {
     function moveLeft() {
         if (currentCardIndex > 0) {
             currentCardIndex--;
-            quickList.positionViewAtIndex(currentCardIndex, ListView.Contain);
+            recentList.positionViewAtIndex(currentCardIndex, ListView.Contain);
         }
     }
 
     function moveRight() {
-        if (currentCardIndex < quickList.count - 1) {
+        if (currentCardIndex < recentList.count - 1) {
             currentCardIndex++;
-            quickList.positionViewAtIndex(currentCardIndex, ListView.Contain);
+            recentList.positionViewAtIndex(currentCardIndex, ListView.Contain);
         }
     }
 
@@ -53,338 +50,303 @@ Item {
         if (cmd) appLauncher.launch(cmd, did, wmc);
     }
 
-    Row {
-        id: heroRow
-        anchors.fill: parent
-        anchors.leftMargin: 144 * hero.s
-        anchors.rightMargin: 48 * hero.s
-        anchors.topMargin: 28 * hero.s
-        anchors.bottomMargin: 20 * hero.s
+    // ── Clock ───────────────────────────────────────────────────
 
-        readonly property real gap: 28 * hero.s
-        spacing: gap
+    Column {
+        id: topStack
+        anchors.top: parent.top
+        anchors.topMargin: 20 * hero.s
+        anchors.horizontalCenter: parent.horizontalCenter
+        spacing: 2 * hero.s
 
-        // ── Vertical clock + date ───────────────────────────────
+        Text {
+            id: dateLine
+            anchors.horizontalCenter: parent.horizontalCenter
+            font { pixelSize: 17 * hero.s; family: "Sans"; letterSpacing: 0.8 }
+            color: "#C7CDD5"
 
-        Item {
-            id: clockCol
-            width: 140 * hero.s
-            height: parent.height
+            Timer {
+                running: true
+                repeat: true
+                interval: 60000
+                triggeredOnStart: true
+                onTriggered: {
+                    let d = new Date();
+                    let days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+                    let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                    dateLine.text = days[d.getDay()] + ", " + months[d.getMonth()] + " " + d.getDate();
+                }
+            }
+        }
 
-            Column {
-                anchors.centerIn: parent
-                spacing: -14 * hero.s
+        Row {
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 12 * hero.s
 
-                Text {
-                    id: dateLine
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    font { pixelSize: 19 * hero.s; family: "Sans" }
-                    color: "#E8E4DC"
-                    bottomPadding: 12 * hero.s
-
-                    Timer {
-                        running: true; repeat: true; interval: 60000
-                        triggeredOnStart: true
-                        onTriggered: {
-                            let d = new Date();
-                            let days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-                            let months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-                            dateLine.text = days[d.getDay()] + ", " + months[d.getMonth()] + " " + d.getDate();
-                        }
+            Text {
+                id: hoursBlock
+                font { pixelSize: 78 * hero.s; bold: true; family: "Sans" }
+                color: "#F5F0E6"
+                Timer {
+                    running: true
+                    repeat: true
+                    interval: 1000
+                    triggeredOnStart: true
+                    onTriggered: {
+                        let d = new Date();
+                        hoursBlock.text = String(d.getHours()).padStart(2, "0");
                     }
                 }
+            }
 
-                Text {
-                    id: hoursBlock
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    font { pixelSize: 96 * hero.s; bold: true; family: "Sans" }
-                    color: "#F5F0E6"
+            Text {
+                text: ":"
+                font { pixelSize: 72 * hero.s; bold: true; family: "Sans" }
+                color: "#87909B"
+                anchors.verticalCenter: parent.verticalCenter
+            }
 
-                    Timer {
-                        running: true; repeat: true; interval: 1000
-                        triggeredOnStart: true
-                        onTriggered: {
-                            let d = new Date();
-                            hoursBlock.text = String(d.getHours()).padStart(2, "0");
-                        }
-                    }
-                }
-
-                Text {
-                    id: minsBlock
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    font { pixelSize: 96 * hero.s; bold: true; family: "Sans" }
-                    color: "#F5F0E6"
-
-                    Timer {
-                        running: true; repeat: true; interval: 1000
-                        triggeredOnStart: true
-                        onTriggered: {
-                            let d = new Date();
-                            minsBlock.text = String(d.getMinutes()).padStart(2, "0");
-                        }
+            Text {
+                id: minsBlock
+                font { pixelSize: 78 * hero.s; bold: true; family: "Sans" }
+                color: "#F5F0E6"
+                Timer {
+                    running: true
+                    repeat: true
+                    interval: 1000
+                    triggeredOnStart: true
+                    onTriggered: {
+                        let d = new Date();
+                        minsBlock.text = String(d.getMinutes()).padStart(2, "0");
                     }
                 }
             }
         }
 
-        // ── Weather (transparent, split top/bottom) ─────────────
+        // All current-weather details are grouped below the clock.
+        Row {
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 16 * hero.s
 
-        Item {
-            id: wxCard
-            readonly property real wxPad: 16 * hero.s
-            width: Math.min(heroRow.width * 0.36, heroRow.width - clockCol.width - quickLaunchCol.width - 2 * heroRow.gap)
-            height: parent.height
+            Image {
+                width: 66 * hero.s
+                height: 66 * hero.s
+                source: weather.icon
+                sourceSize: Qt.size(128, 128)
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+                asynchronous: true
+            }
 
-            // ── Top: current weather ────────────────────────────
-            Item {
-                id: wxTop
-                anchors.top: parent.top
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.leftMargin: wxCard.wxPad
-                anchors.rightMargin: wxCard.wxPad
-                height: parent.height * 0.42
+            Column {
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 1 * hero.s
 
-                Row {
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.left: parent.left
-                    spacing: 10 * hero.s
+                Text {
+                    text: weather.temperature
+                    font { pixelSize: 34 * hero.s; bold: true; family: "Sans" }
+                    color: "#FFFFFF"
+                }
 
-                    Text {
-                        text: weather.icon
-                        font.pixelSize: 72 * hero.s
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
+                Text {
+                    text: weather.condition
+                    font { pixelSize: 16 * hero.s; family: "Sans" }
+                    color: "#B0B8C1"
+                }
+
+                Text {
+                    text: weather.location || "—"
+                    font { pixelSize: 14 * hero.s; bold: true; family: "Sans" }
+                    color: "#8794A4"
+                    elide: Text.ElideRight
+                    width: 230 * hero.s
+                    horizontalAlignment: Text.AlignLeft
+                }
+            }
+        }
+    }
+
+    // ── Five-day forecast ───────────────────────────────────────
+
+    Item {
+        id: forecastArea
+        width: Math.min(parent.width - 120 * hero.s, 610 * hero.s)
+        height: 104 * hero.s
+        anchors.top: topStack.bottom
+        anchors.topMargin: 5 * hero.s
+        anchors.horizontalCenter: parent.horizontalCenter
+
+        Canvas {
+            id: forecastLine
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: 42 * hero.s
+
+            onWidthChanged: requestPaint()
+            onHeightChanged: requestPaint()
+
+            onPaint: {
+                var ctx = getContext("2d");
+                if (!ctx) return;
+                ctx.clearRect(0, 0, width, height);
+                var days = hero.forecastDays;
+                if (!days || days.length < 2) return;
+
+                var values = [];
+                for (var i = 0; i < days.length; i++) values.push(days[i].max);
+                var lo = Math.min.apply(null, values);
+                var hi = Math.max.apply(null, values);
+                if (hi - lo < 6) {
+                    var mid = (hi + lo) / 2;
+                    lo = mid - 3;
+                    hi = mid + 3;
+                }
+
+                var xs = [], ys = [];
+                for (var j = 0; j < days.length; j++) {
+                    xs.push((j + 0.5) * width / days.length);
+                    ys.push(5 + (1 - (days[j].max - lo) / (hi - lo)) * (height - 10));
+                }
+
+                ctx.strokeStyle = appConfig.highlightColor;
+                ctx.lineWidth = Math.max(2, 2.5 * hero.s);
+                ctx.lineCap = "round";
+                ctx.lineJoin = "round";
+                ctx.globalAlpha = 0.32;
+                ctx.beginPath();
+                ctx.moveTo(xs[0], ys[0]);
+                for (var k = 1; k < xs.length; k++) {
+                    var mx = (xs[k - 1] + xs[k]) / 2;
+                    var my = (ys[k - 1] + ys[k]) / 2;
+                    ctx.quadraticCurveTo(xs[k - 1], ys[k - 1], mx, my);
+                }
+                ctx.lineTo(xs[xs.length - 1], ys[ys.length - 1]);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        Row {
+            anchors.fill: parent
+            spacing: 0
+
+            Repeater {
+                model: 5
+
+                Item {
+                    readonly property var dayData: index < hero.forecastDays.length ? hero.forecastDays[index] : null
+                    width: forecastArea.width / 5
+                    height: forecastArea.height
 
                     Column {
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 2
+                        anchors.top: parent.top
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 1 * hero.s
+
+                        Image {
+                            width: 31 * hero.s
+                            height: 31 * hero.s
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            source: dayData ? dayData.icon : ""
+                            sourceSize: Qt.size(64, 64)
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            asynchronous: true
+                        }
 
                         Text {
-                            text: weather.temperature
-                            font { pixelSize: 51 * hero.s; bold: true; family: "Sans" }
+                            width: parent.width
+                            text: dayData ? (dayData.min + " / " + dayData.max + "°") : "—"
+                            font { pixelSize: 13 * hero.s; bold: true; family: "Sans" }
+                            horizontalAlignment: Text.AlignHCenter
                             color: "#FFFFFF"
                         }
 
                         Text {
-                            text: weather.condition
-                            font { pixelSize: 18 * hero.s; family: "Sans" }
-                            color: "#B0B8C1"
-                        }
-                    }
-
-                    Text {
-                        text: weather.location || "—"
-                        font { pixelSize: 33 * hero.s; bold: true; family: "Sans" }
-                        color: "#FFFFFF"
-                        anchors.verticalCenter: parent.verticalCenter
-                        wrapMode: Text.WordWrap
-                        maximumLineCount: 3
-                        width: Math.min(implicitWidth, wxTop.width * 0.48)
-                    }
-                }
-            }
-
-            // ── Bottom: 5-day forecast ──────────────────────────
-            Item {
-                id: forecastWrap
-                anchors.top: wxTop.bottom
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                anchors.leftMargin: wxCard.wxPad
-                anchors.rightMargin: wxCard.wxPad
-
-                Canvas {
-                    id: trendCanvas
-                    anchors.fill: parent
-                    property real strokeW: Math.max(2.5, 3 * hero.s)
-
-                    onWidthChanged: requestPaint()
-                    onHeightChanged: requestPaint()
-
-                    onPaint: {
-                        var ctx = getContext("2d");
-                        if (!ctx) return;
-                        ctx.clearRect(0, 0, width, height);
-                        var days = hero.forecastDays;
-                        if (!days || days.length < 2) return;
-
-                        var w = width;
-                        var h = height;
-                        var padX = w / (days.length * 2);
-                        var padTop = 10 * hero.s;
-                        var padBot = 10 * hero.s;
-                        var drawH = Math.max(16, h - padTop - padBot);
-
-                        var maxTs = [];
-                        for (var i = 0; i < days.length; i++) maxTs.push(days[i].max);
-                        var gmin = Math.min.apply(null, maxTs);
-                        var gmax = Math.max.apply(null, maxTs);
-                        var range = gmax - gmin;
-                        var minRange = 10;
-                        if (range < minRange) {
-                            var mid = (gmin + gmax) / 2;
-                            gmin = mid - minRange / 2;
-                            gmax = mid + minRange / 2;
+                            width: parent.width
+                            text: dayData ? (dayData.rain + "%") : ""
+                            font { pixelSize: 11 * hero.s; family: "Sans" }
+                            horizontalAlignment: Text.AlignHCenter
+                            color: "#9AA0A6"
                         }
 
-                        var n = days.length;
-                        var xs = [], ys = [];
-                        for (var i = 0; i < n; i++) {
-                            var t = (n > 1) ? (i / (n - 1)) : 0.5;
-                            xs.push(padX + t * (w - 2 * padX));
-                            var norm = (days[i].max - gmin) / (gmax - gmin);
-                            ys.push(padTop + (1 - norm) * drawH);
+                        Text {
+                            width: parent.width
+                            text: dayData ? dayData.abbr : ""
+                            font { pixelSize: 12 * hero.s; bold: true; family: "Sans" }
+                            horizontalAlignment: Text.AlignHCenter
+                            color: "#D9DEE5"
                         }
-
-                        ctx.strokeStyle = appConfig.highlightColor;
-                        ctx.lineWidth = trendCanvas.strokeW;
-                        ctx.lineCap = "round";
-                        ctx.lineJoin = "round";
-                        ctx.globalAlpha = 0.35;
-                        ctx.beginPath();
-                        ctx.moveTo(xs[0], ys[0]);
-                        for (var j = 0; j < n - 1; j++) {
-                            var xc = (xs[j] + xs[j + 1]) / 2;
-                            var yc = (ys[j] + ys[j + 1]) / 2;
-                            ctx.quadraticCurveTo(xs[j], ys[j], xc, yc);
-                        }
-                        ctx.quadraticCurveTo(xs[n - 1], ys[n - 1], xs[n - 1], ys[n - 1]);
-                        ctx.stroke();
-                        ctx.globalAlpha = 1;
-                    }
-                }
-
-                Row {
-                    anchors.fill: parent
-                    z: 1
-                    spacing: 0
-
-                    Repeater {
-                        model: 5
-
-                        Item {
-                            readonly property var d: index < hero.forecastDays.length ? hero.forecastDays[index] : null
-                            width: forecastWrap.width / 5
-                            height: forecastWrap.height
-
-                            Column {
-                                anchors.centerIn: parent
-                                spacing: 3 * hero.s
-
-                                Text {
-                                    width: parent.parent.width
-                                    text: d ? d.icon : "—"
-                                    font.pixelSize: 30 * hero.s
-                                    horizontalAlignment: Text.AlignHCenter
-                                }
-
-                                Text {
-                                    width: parent.parent.width
-                                    text: d ? (d.min + "/" + d.max + "°C") : "—"
-                                    font { pixelSize: 17 * hero.s; bold: true; family: "Sans" }
-                                    horizontalAlignment: Text.AlignHCenter
-                                    color: "#FFFFFF"
-                                }
-
-                                Text {
-                                    width: parent.parent.width
-                                    text: d ? (d.rain + "%") : "—"
-                                    font.pixelSize: 15 * hero.s
-                                    horizontalAlignment: Text.AlignHCenter
-                                    color: "#9AA0A6"
-                                }
-
-                                Text {
-                                    width: parent.parent.width
-                                    text: d ? d.abbr : ""
-                                    font { pixelSize: 18 * hero.s; bold: true; family: "Sans" }
-                                    horizontalAlignment: Text.AlignHCenter
-                                    color: "#FFFFFF"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // ── Separator (weather | quick launch) ────────────────────
-
-        Item {
-            id: wxQuickSep
-            width: 1
-            height: parent.height
-
-            Rectangle {
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: 1
-                height: parent.height * 0.62
-                color: "#2A3040"
-            }
-        }
-
-        // ── Quick launch ──────────────────────────────────────────
-
-        Item {
-            id: quickLaunchCol
-            width: Math.max(80 * hero.s, heroRow.width - clockCol.width - wxCard.width - wxQuickSep.width - 3 * heroRow.gap)
-            height: parent.height
-
-            Column {
-                width: parent.width
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 12 * hero.s
-
-                Text {
-                    text: "QUICK LAUNCH"
-                    font { pixelSize: 12 * hero.s; bold: true; family: "Sans"; letterSpacing: 1.5 }
-                    color: "#6B7280"
-                }
-
-                ListView {
-                    id: quickList
-                    width: parent.width
-                    height: 136 * hero.s
-                    orientation: ListView.Horizontal
-                    spacing: 12 * hero.s
-                    interactive: true
-                    boundsBehavior: Flickable.StopAtBounds
-                    clip: false
-                    cacheBuffer: 2000
-                    model: mostUsedModel
-
-                    delegate: AppCard {
-                        width: 104 * hero.s
-                        height: 128 * hero.s
-                        appName: model.name
-                        appIconSource: model.iconSource
-                        isFocused: hero.isActive && (index === hero.currentCardIndex)
-                        isLoading: model.desktopId === appLauncher.loadingId
-                        onClicked: {
-                            hero.currentCardIndex = index;
-                            hero.activate();
-                        }
-                    }
-
-                    Behavior on contentX {
-                        NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
                     }
                 }
             }
         }
     }
 
-    Rectangle {
-        anchors.bottom: parent.bottom
+    // ── Recent Apps ─────────────────────────────────────────────
+
+    Item {
+        id: recentArea
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.leftMargin: 72 * hero.s
-        anchors.rightMargin: 48 * hero.s
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 24 * hero.s
+        height: 164 * hero.s
+
+        Text {
+            id: recentTitle
+            anchors.top: parent.top
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: "RECENT APPS"
+            font { pixelSize: 13 * hero.s; bold: true; family: "Sans"; letterSpacing: 2.0 }
+            color: hero.isActive ? "#DDE5EF" : "#8A95A3"
+        }
+
+        ListView {
+            id: recentList
+            anchors.top: recentTitle.bottom
+            anchors.topMargin: 9 * hero.s
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: Math.min(parent.width - 100 * hero.s,
+                Math.max(120 * hero.s, count * 130 * hero.s))
+            height: 136 * hero.s
+            orientation: ListView.Horizontal
+            spacing: 14 * hero.s
+            interactive: true
+            boundsBehavior: Flickable.StopAtBounds
+            clip: false
+            cacheBuffer: 2000
+            model: mostUsedModel
+
+            delegate: AppCard {
+                width: 116 * hero.s
+                height: 128 * hero.s
+                appName: model.name
+                appIconSource: model.iconSource
+                isFocused: hero.isActive && (index === hero.currentCardIndex)
+                isLoading: model.desktopId === appLauncher.loadingId
+                onClicked: {
+                    hero.currentCardIndex = index;
+                    hero.activate();
+                }
+            }
+
+            Behavior on contentX {
+                NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
+            }
+        }
+    }
+
+    // Home/App Drawer boundary.
+    Rectangle {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.leftMargin: 36 * hero.s
+        anchors.rightMargin: 36 * hero.s
         height: 1
-        color: "#1F2937"
+        color: "#66717F"
+        opacity: 0.55
     }
 }

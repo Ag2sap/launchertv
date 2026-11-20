@@ -107,7 +107,7 @@ ApplicationWindow {
         function onConfigChanged() { reloadBackground(); }
     }
 
-    // ── Main content ────────────────────────────────────────────
+    // ── Home + App Drawer share one scroll surface ──────────────
 
     FocusScope {
         id: mainFocus
@@ -117,15 +117,15 @@ ApplicationWindow {
         Flickable {
             id: mainFlickable
 
-            // Keep the original focus hierarchy intact. Safe Area is applied
-            // to the viewport geometry only; no parent scaling or transforms.
+            // Safe Area remains a viewport margin only. The interactive
+            // focus hierarchy is not scaled or transformed.
             anchors.fill: parent
             anchors.leftMargin: root.width * appConfig.safeAreaLeft / 100
             anchors.rightMargin: root.width * appConfig.safeAreaRight / 100
             anchors.topMargin: root.height * appConfig.safeAreaTop / 100
             anchors.bottomMargin: root.height * appConfig.safeAreaBottom / 100
 
-            contentHeight: mainColumn.height + 40
+            contentHeight: mainColumn.implicitHeight
             clip: true
             interactive: true
             boundsBehavior: Flickable.StopAtBounds
@@ -138,20 +138,34 @@ ApplicationWindow {
                 HeroWidget {
                     id: heroWidget
                     width: parent.width
-                    height: 374 * appConfig.scale
+                    height: mainFlickable.height
                     isActive: root.currentRowIndex === 0 && !settingsPage.visible
                 }
 
-                Repeater {
-                    id: rowRepeater
-                    model: categoryModel
+                // Reserve one complete viewport for the drawer. This gives
+                // the first category enough scroll range to move Home fully
+                // off-screen even when there are only a few app categories.
+                Item {
+                    id: drawerPage
+                    width: parent.width
+                    height: Math.max(mainFlickable.height, drawerColumn.implicitHeight)
 
-                    AppRow {
-                        width: mainColumn.width
-                        rowCategoryName: model.categoryName
-                        rowAppsModel: model.appsModel
-                        rowAppCount: model.appCount
-                        isActiveRow: (index + 1) === root.currentRowIndex && !settingsPage.visible
+                    Column {
+                        id: drawerColumn
+                        width: parent.width
+
+                        Repeater {
+                            id: rowRepeater
+                            model: categoryModel
+
+                            AppRow {
+                                width: drawerColumn.width
+                                rowCategoryName: model.categoryName
+                                rowAppsModel: model.appsModel
+                                rowAppCount: model.appCount
+                                isActiveRow: (index + 1) === root.currentRowIndex && !settingsPage.visible
+                            }
+                        }
                     }
                 }
             }
@@ -161,7 +175,7 @@ ApplicationWindow {
             id: scrollAnim
             target: mainFlickable
             property: "contentY"
-            duration: 320
+            duration: 420
             easing.type: Easing.OutCubic
         }
 
@@ -216,10 +230,14 @@ ApplicationWindow {
     }
 
     function scrollToRow() {
-        let row = getActiveRow();
-        if (!row) return;
-        let targetY = row.y - 20;
-        targetY = Math.max(0, Math.min(targetY, mainFlickable.contentHeight - mainFlickable.height));
+        let targetY = 0;
+        if (currentRowIndex > 0) {
+            let row = rowRepeater.itemAt(currentRowIndex - 1);
+            if (!row) return;
+            targetY = heroWidget.height + row.y;
+        }
+        targetY = Math.max(0, Math.min(targetY,
+            mainFlickable.contentHeight - mainFlickable.height));
         scrollAnim.stop();
         scrollAnim.from = mainFlickable.contentY;
         scrollAnim.to = targetY;
