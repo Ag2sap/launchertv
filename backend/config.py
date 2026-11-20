@@ -178,15 +178,15 @@ class AppConfig(QObject):
                 AUTOSTART_DIR.mkdir(parents=True, exist_ok=True)
                 main_py = PROJECT_DIR / "main.py"
                 AUTOSTART_FILE.write_text(
-                    "[Desktop Entry]\\n"
-                    "Type=Application\\n"
-                    "Name=LauncherTV\\n"
-                    "Comment=Android TV-style launcher for Linux\\n"
-                    f"Exec=python3 {main_py}\\n"
-                    "Icon=preferences-desktop\\n"
-                    "Terminal=false\\n"
-                    "Categories=System;\\n"
-                    "StartupWMClass=LauncherTV\\n"
+                    "[Desktop Entry]\n"
+                    "Type=Application\n"
+                    "Name=LauncherTV\n"
+                    "Comment=Android TV-style launcher for Linux\n"
+                    f"Exec=python3 {main_py}\n"
+                    "Icon=preferences-desktop\n"
+                    "Terminal=false\n"
+                    "Categories=System;\n"
+                    "StartupWMClass=LauncherTV\n"
                 )
             else:
                 AUTOSTART_FILE.unlink(missing_ok=True)
