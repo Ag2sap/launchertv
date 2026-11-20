@@ -8,7 +8,7 @@ Item {
     property int currentCardIndex: 0
     readonly property real s: appConfig.scale
 
-    height: 150 * s
+    height: 154 * s
     visible: modelObject !== null && modelObject.count > 0
 
     function moveLeft() {
@@ -72,7 +72,7 @@ Item {
 
         delegate: AppCard {
             width: 116 * row.s
-            height: 116 * row.s
+            height: 128 * row.s
             appName: model.name
             appIconSource: model.iconSource
             isFocused: row.isActiveRow && (index === row.currentCardIndex)
