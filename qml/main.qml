@@ -36,8 +36,8 @@ ApplicationWindow {
     Connections {
         target: workspaceModel
         function onCountChanged() {
-            if (workspaceModel.count === 0 && root.homeFocusIndex === 1)
-                root.homeFocusIndex = 0;
+            if (workspaceModel.count === 0 && root.homeFocusIndex === 0)
+                root.homeFocusIndex = 1;
         }
     }
 
