@@ -13,6 +13,8 @@ PROJECT_DIR = Path(__file__).resolve().parent.parent
 
 DEFAULTS = {
     "scale": 1.0,
+    # Global centered UI margin for overscan-safe rendering (0.88 = 6% per side).
+    "safeAreaScale": 0.88,
     "highlightColor": "#5EB8FF",
     "autoAccentColor": False,
     "backgroundTint": 0.75,
@@ -63,6 +65,16 @@ class AppConfig(QObject):
         self._set("scale", round(max(0.5, min(2.0, v)), 2))
 
     scale = Property(float, _get_scale, _set_scale, notify=configChanged)
+
+    def _get_safe_area_scale(self):
+        return float(self._data.get("safeAreaScale", 0.88))
+
+    def _set_safe_area_scale(self, v):
+        self._set("safeAreaScale", round(max(0.70, min(1.0, v)), 2))
+
+    safeAreaScale = Property(
+        float, _get_safe_area_scale, _set_safe_area_scale, notify=configChanged
+    )
 
     def _get_highlight(self):
         return self._data.get("highlightColor", "#5EB8FF")
