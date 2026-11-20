@@ -68,7 +68,7 @@ Item {
         Column {
             id: clockColumn
             anchors.left: parent.left
-            anchors.leftMargin: 28 * hero.s
+            anchors.leftMargin: 40 * hero.s
             anchors.verticalCenter: parent.verticalCenter
             spacing: -14 * hero.clockScale
 
@@ -132,8 +132,8 @@ Item {
             id: currentWeather
             anchors.left: clockColumn.right
             anchors.leftMargin: 22 * hero.s
-            anchors.right: parent.right
-            anchors.rightMargin: 24 * hero.s
+            anchors.right: resumeDivider.visible ? resumeDivider.left : parent.right
+            anchors.rightMargin: resumeDivider.visible ? 14 * hero.s : 24 * hero.s
             anchors.verticalCenter: parent.verticalCenter
             spacing: 12 * hero.s
 
@@ -175,24 +175,50 @@ Item {
                 }
             }
         }
+
+        Rectangle {
+            id: resumeDivider
+            visible: workspaceModel.count > 0
+            anchors.right: resumeRow.left
+            anchors.rightMargin: 8 * hero.s
+            anchors.verticalCenter: parent.verticalCenter
+            width: 1
+            height: 116 * hero.s
+            color: "#66717F"
+            opacity: 0.55
+        }
+
+        WorkspaceRow {
+            id: resumeRow
+            visible: workspaceModel.count > 0
+            anchors.right: parent.right
+            anchors.rightMargin: 18 * hero.s
+            anchors.verticalCenter: parent.verticalCenter
+            width: 204 * hero.s
+            height: 142 * hero.s
+            modelObject: workspaceModel
+            scaleFactor: hero.s
+            isActiveRow: hero.workspaceActive
+        }
     }
 
-    // ── Five-day forecast stays intact, moved below clock/weather ─
+    // ── Three-day forecast, aligned with current weather ────────
 
     Item {
         id: forecastArea
-        width: Math.min(parent.width - 100 * hero.s, 610 * hero.s)
-        height: 92 * hero.s
+        anchors.left: currentWeather.left
+        anchors.right: parent.right
+        anchors.rightMargin: 24 * hero.s
+        height: 94 * hero.s
         anchors.top: topInfoArea.bottom
         anchors.topMargin: 3 * hero.s
-        anchors.horizontalCenter: parent.horizontalCenter
 
         Canvas {
             id: forecastLine
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            height: 34 * hero.s
+            height: 24 * hero.s
 
             onWidthChanged: requestPaint()
             onHeightChanged: requestPaint()
@@ -201,7 +227,7 @@ Item {
                 var ctx = getContext("2d");
                 if (!ctx) return;
                 ctx.clearRect(0, 0, width, height);
-                var days = hero.forecastDays;
+                var days = hero.forecastDays.slice(0, 3);
                 if (!days || days.length < 2) return;
 
                 var values = [];
@@ -241,10 +267,10 @@ Item {
         Row {
             anchors.fill: parent
             Repeater {
-                model: 5
+                model: 3
                 Item {
                     readonly property var dayData: index < hero.forecastDays.length ? hero.forecastDays[index] : null
-                    width: forecastArea.width / 5
+                    width: forecastArea.width / 3
                     height: forecastArea.height
 
                     Column {
@@ -253,8 +279,8 @@ Item {
                         spacing: 1 * hero.s
 
                         Image {
-                            width: 28 * hero.s
-                            height: 28 * hero.s
+                            width: 38 * hero.s
+                            height: 38 * hero.s
                             anchors.horizontalCenter: parent.horizontalCenter
                             source: dayData ? dayData.icon : ""
                             sourceSize: Qt.size(64, 64)
@@ -266,7 +292,7 @@ Item {
                         Text {
                             width: parent.width
                             text: dayData ? (dayData.min + " / " + dayData.max + "°") : "—"
-                            font { pixelSize: 12 * hero.s; bold: true; family: "Sans" }
+                            font { pixelSize: 16 * hero.s; bold: true; family: "Sans" }
                             horizontalAlignment: Text.AlignHCenter
                             color: "#FFFFFF"
                         }
@@ -274,7 +300,7 @@ Item {
                         Text {
                             width: parent.width
                             text: dayData ? (dayData.rain + "%") : ""
-                            font { pixelSize: 10 * hero.s; family: "Sans" }
+                            font { pixelSize: 13 * hero.s; family: "Sans" }
                             horizontalAlignment: Text.AlignHCenter
                             color: "#9AA0A6"
                         }
@@ -282,7 +308,7 @@ Item {
                         Text {
                             width: parent.width
                             text: dayData ? dayData.abbr : ""
-                            font { pixelSize: 11 * hero.s; bold: true; family: "Sans" }
+                            font { pixelSize: 14 * hero.s; bold: true; family: "Sans" }
                             horizontalAlignment: Text.AlignHCenter
                             color: "#D9DEE5"
                         }
@@ -292,7 +318,7 @@ Item {
         }
     }
 
-    // ── Resume + Most used share one horizontal strip ────────────
+    // ── Most used spans the full lower Home area ────────────────
 
     Item {
         id: bottomAppsArea
@@ -302,35 +328,10 @@ Item {
         anchors.bottomMargin: 24 * hero.s
         height: 164 * hero.s
 
-        WorkspaceRow {
-            id: workspaceRowItem
-            anchors.left: parent.left
-            anchors.leftMargin: 22 * hero.s
-            anchors.top: parent.top
-            width: workspaceModel.count > 0 ? Math.min(parent.width * 0.30, 190 * hero.s) : 0
-            height: parent.height
-            modelObject: workspaceModel
-            scaleFactor: hero.s
-            isActiveRow: hero.workspaceActive
-        }
-
-        Rectangle {
-            id: workspaceDivider
-            visible: workspaceModel.count > 0
-            anchors.left: workspaceRowItem.right
-            anchors.leftMargin: 8 * hero.s
-            anchors.verticalCenter: parent.verticalCenter
-            width: 1
-            height: 116 * hero.s
-            color: "#66717F"
-            opacity: 0.55
-        }
-
         Item {
             id: recentArea
-            anchors.left: workspaceModel.count > 0
-                ? workspaceDivider.right : parent.left
-            anchors.leftMargin: workspaceModel.count > 0 ? 14 * hero.s : 24 * hero.s
+            anchors.left: parent.left
+            anchors.leftMargin: 24 * hero.s
             anchors.right: parent.right
             anchors.rightMargin: 18 * hero.s
             anchors.top: parent.top
@@ -351,7 +352,7 @@ Item {
                 anchors.topMargin: 8 * hero.s
                 anchors.left: parent.left
                 anchors.right: parent.right
-                height: 136 * hero.s
+                height: 148 * hero.s
                 orientation: ListView.Horizontal
                 spacing: 12 * hero.s
                 interactive: true
@@ -361,8 +362,8 @@ Item {
                 model: mostUsedModel
 
                 delegate: AppCard {
-                    width: workspaceModel.count > 0 ? 94 * hero.s : 116 * hero.s
-                    height: workspaceModel.count > 0 ? 112 * hero.s : 128 * hero.s
+                    width: 136 * hero.s
+                    height: 150 * hero.s
                     appName: model.name
                     appIconSource: model.iconSource
                     isFocused: hero.isActive && (index === hero.currentCardIndex)
