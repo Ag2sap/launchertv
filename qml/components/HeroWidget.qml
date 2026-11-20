@@ -6,7 +6,7 @@ Item {
     property bool isActive: false
     property bool workspaceActive: false
     property int currentCardIndex: 0
-    readonly property real s: appConfig.scale
+    readonly property real s: Math.min(appConfig.scale, Math.max(0.65, height / 650))
     property var forecastDays: []
     property alias workspaceRow: workspaceRowItem
 
@@ -346,6 +346,7 @@ Item {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 24 * hero.s
         modelObject: workspaceModel
+        scaleFactor: hero.s
         isActiveRow: hero.workspaceActive
     }
 

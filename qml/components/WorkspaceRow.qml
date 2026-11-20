@@ -6,7 +6,8 @@ Item {
     property var modelObject: null
     property bool isActiveRow: false
     property int currentCardIndex: 0
-    readonly property real s: appConfig.scale
+    property real scaleFactor: 1.0
+    readonly property real s: scaleFactor
 
     height: 154 * s
     visible: modelObject !== null && modelObject.count > 0

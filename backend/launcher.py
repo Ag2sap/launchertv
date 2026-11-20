@@ -48,6 +48,7 @@ class AppLauncher(QObject):
         if wm_class:
             existing = x11.find_window_by_class(wm_class)
             if existing:
+                x11.remove_decorations(existing)
                 x11.restore_window(existing)
                 self._set_loading_id("")
                 return
