@@ -546,6 +546,16 @@ FocusScope {
                             border.width: 1
                             border.color: appConfig.highlightColor
 
+                            Text {
+                                anchors.fill: parent
+                                anchors.margins: 6
+                                visible: locationInput.text.length === 0
+                                text: "City, Region"
+                                font { pixelSize: 12; family: "Sans" }
+                                color: "#6B7280"
+                                verticalAlignment: Text.AlignVCenter
+                            }
+
                             TextInput {
                                 id: locationInput
                                 anchors.fill: parent
@@ -556,8 +566,9 @@ FocusScope {
                                 focus: page.editing && page.currentIdx === 6
 
                                 Keys.onReturnPressed: {
-                                    appConfig.weatherLocation = text;
-                                    weather.setLocation(text);
+                                    let location = text.trim();
+                                    appConfig.weatherLocation = location;
+                                    weather.setLocation(location);
                                     page.editing = false;
                                     page.forceActiveFocus();
                                 }
