@@ -107,6 +107,20 @@ ApplicationWindow {
         function onConfigChanged() { reloadBackground(); }
     }
 
+    // ── Safe Area content layer ─────────────────────────────────
+    // Background remains full-screen; all interactive launcher UI is
+    // uniformly scaled around the display center for RCA overscan.
+
+    Item {
+        id: safeAreaLayer
+        anchors.fill: parent
+
+        Item {
+            id: safeAreaContent
+            anchors.fill: parent
+            scale: appConfig.safeAreaScale
+            transformOrigin: Item.Center
+
     // ── Main content ────────────────────────────────────────────
 
     FocusScope {
@@ -266,6 +280,9 @@ ApplicationWindow {
         target: appLauncher
         function onSettingsRequested() { settingsPage.visible = true; }
     }
+
+        } // safeAreaContent
+    } // safeAreaLayer
 
     onActiveChanged: {
         if (!active) {
