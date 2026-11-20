@@ -66,8 +66,7 @@ Item {
         anchors.topMargin: 7 * row.s
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 3 * row.s
+        height: 104 * row.s
         orientation: ListView.Vertical
         spacing: 6 * row.s
         interactive: modelObject !== null && modelObject.count > 2
