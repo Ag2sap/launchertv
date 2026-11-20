@@ -113,7 +113,7 @@ Item {
             Text {
                 id: minsBlock
                 anchors.horizontalCenter: parent.horizontalCenter
-                font { pixelSize: 96 * hero.s; bold: true; family: "Sans" }
+                font { pixelSize: 96 * hero.clockScale; bold: true; family: "Sans" }
                 color: "#F5F0E6"
                 Timer {
                     running: true
