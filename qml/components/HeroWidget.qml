@@ -63,7 +63,7 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.topMargin: 10 * hero.s
-        height: 210 * hero.clockScale
+        height: 230 * hero.clockScale
 
         Column {
             id: clockColumn
