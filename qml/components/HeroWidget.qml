@@ -69,6 +69,7 @@ Item {
             id: clockColumn
             anchors.left: parent.left
             anchors.leftMargin: 40 * hero.s
+            width: 190 * hero.s
             anchors.verticalCenter: parent.verticalCenter
             spacing: -14 * hero.clockScale
 
@@ -131,15 +132,15 @@ Item {
         Row {
             id: currentWeather
             anchors.left: clockColumn.right
-            anchors.leftMargin: 22 * hero.s
+            anchors.leftMargin: 18 * hero.s
             anchors.right: resumeDivider.visible ? resumeDivider.left : parent.right
             anchors.rightMargin: resumeDivider.visible ? 14 * hero.s : 24 * hero.s
             anchors.verticalCenter: parent.verticalCenter
             spacing: 12 * hero.s
 
             Image {
-                width: 72 * hero.s
-                height: 72 * hero.s
+                width: 64 * hero.s
+                height: 64 * hero.s
                 anchors.verticalCenter: parent.verticalCenter
                 source: weather.icon
                 sourceSize: Qt.size(128, 128)
@@ -154,13 +155,13 @@ Item {
 
                 Text {
                     text: weather.temperature
-                    font { pixelSize: 48 * hero.s; bold: true; family: "Sans" }
+                    font { pixelSize: 44 * hero.s; bold: true; family: "Sans" }
                     color: "#FFFFFF"
                 }
 
                 Text {
                     text: weather.condition
-                    font { pixelSize: 17 * hero.s; family: "Sans" }
+                    font { pixelSize: 15 * hero.s; family: "Sans" }
                     color: "#B0B8C1"
                     elide: Text.ElideRight
                     width: currentWeather.width - 84 * hero.s
@@ -168,7 +169,7 @@ Item {
 
                 Text {
                     text: weather.location || "—"
-                    font { pixelSize: 33 * hero.s; bold: true; family: "Sans" }
+                    font { pixelSize: 30 * hero.s; bold: true; family: "Sans" }
                     color: "#FFFFFF"
                     elide: Text.ElideRight
                     width: currentWeather.width - 84 * hero.s
@@ -199,6 +200,125 @@ Item {
             modelObject: workspaceModel
             scaleFactor: hero.s
             isActiveRow: hero.workspaceActive
+        }
+    }
+
+    // ── Compact CPU + RAM monitor, aligned below the clock ──────
+
+    Item {
+        id: systemMonitorArea
+        x: clockColumn.x
+        width: clockColumn.width
+        height: 78 * hero.s
+        anchors.top: topInfoArea.bottom
+        anchors.topMargin: 3 * hero.s
+
+        Row {
+            id: monitorCards
+            anchors.fill: parent
+            spacing: 8 * hero.s
+
+            Rectangle {
+                id: cpuCard
+                width: (systemMonitorArea.width - monitorCards.spacing) / 2
+                height: parent.height
+                radius: 9 * hero.s
+                color: "#1B2633"
+                opacity: 0.94
+                border.color: "#344354"
+                border.width: 1
+
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 7 * hero.s
+                    spacing: 3 * hero.s
+
+                    Row {
+                        spacing: 4 * hero.s
+                        Text {
+                            text: "▦"
+                            font.pixelSize: 13 * hero.s
+                            color: "#5EB8FF"
+                        }
+                        Text {
+                            text: "CPU"
+                            font { pixelSize: 12 * hero.s; bold: true; family: "Sans" }
+                            color: "#C5D0DC"
+                        }
+                    }
+
+                    Text {
+                        text: Math.round(systemMonitor.cpuUsage) + "%"
+                        font { pixelSize: 22 * hero.s; bold: true; family: "Sans" }
+                        color: "#5EB8FF"
+                    }
+
+                    Rectangle {
+                        width: parent.width
+                        height: 4 * hero.s
+                        radius: 2 * hero.s
+                        color: "#354352"
+
+                        Rectangle {
+                            width: parent.width * Math.max(0, Math.min(100, systemMonitor.cpuUsage)) / 100
+                            height: parent.height
+                            radius: parent.radius
+                            color: "#5EB8FF"
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                id: ramCard
+                width: (systemMonitorArea.width - monitorCards.spacing) / 2
+                height: parent.height
+                radius: 9 * hero.s
+                color: "#1B2633"
+                opacity: 0.94
+                border.color: "#344354"
+                border.width: 1
+
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 7 * hero.s
+                    spacing: 3 * hero.s
+
+                    Row {
+                        spacing: 4 * hero.s
+                        Text {
+                            text: "▤"
+                            font.pixelSize: 13 * hero.s
+                            color: "#52D6A4"
+                        }
+                        Text {
+                            text: "RAM"
+                            font { pixelSize: 12 * hero.s; bold: true; family: "Sans" }
+                            color: "#C5D0DC"
+                        }
+                    }
+
+                    Text {
+                        text: Math.round(systemMonitor.ramUsage) + "%"
+                        font { pixelSize: 22 * hero.s; bold: true; family: "Sans" }
+                        color: "#52D6A4"
+                    }
+
+                    Rectangle {
+                        width: parent.width
+                        height: 4 * hero.s
+                        radius: 2 * hero.s
+                        color: "#354352"
+
+                        Rectangle {
+                            width: parent.width * Math.max(0, Math.min(100, systemMonitor.ramUsage)) / 100
+                            height: parent.height
+                            radius: parent.radius
+                            color: "#52D6A4"
+                        }
+                    }
+                }
+            }
         }
     }
 
