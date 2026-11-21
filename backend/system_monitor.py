@@ -36,7 +36,8 @@ class SystemMonitor(QObject):
                 return 0, 0
 
             values = [int(value) for value in fields[1:]]
-            total = sum(values)
+            # guest and guest_nice are already included in user and nice.
+            total = sum(values[:8])
             idle = values[3] + (values[4] if len(values) > 4 else 0)
             return total, idle
         except (OSError, ValueError, IndexError):
