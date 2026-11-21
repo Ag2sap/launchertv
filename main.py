@@ -20,6 +20,7 @@ from backend.models import (
 )
 from backend.weather import WeatherProvider
 from backend.workspace import WorkspaceModel
+from backend.system_monitor import SystemMonitor
 from backend.x11 import activate_by_name
 
 
@@ -51,6 +52,7 @@ def main():
     launcher.launched.connect(on_launched)
 
     weather = WeatherProvider(config.weatherLocation)
+    system_monitor = SystemMonitor()
 
     ctx = engine.rootContext()
     ctx.setContextProperty("appConfig", config)
@@ -58,6 +60,7 @@ def main():
     ctx.setContextProperty("mostUsedModel", most_used_model)
     ctx.setContextProperty("appLauncher", launcher)
     ctx.setContextProperty("weather", weather)
+    ctx.setContextProperty("systemMonitor", system_monitor)
     ctx.setContextProperty("workspaceModel", workspace_model)
 
     qml_path = Path(__file__).resolve().parent / "qml" / "main.qml"
