@@ -69,7 +69,7 @@ Item {
             id: clockColumn
             anchors.left: parent.left
             anchors.leftMargin: 40 * hero.s
-            width: 190 * hero.s
+            width: 204 * hero.s
             anchors.verticalCenter: parent.verticalCenter
             spacing: -14 * hero.clockScale
 
