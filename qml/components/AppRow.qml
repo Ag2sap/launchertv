@@ -64,7 +64,8 @@ Item {
         interactive: true
         boundsBehavior: Flickable.StopAtBounds
         clip: false
-        cacheBuffer: 3000
+        // Keep a short prefetch window; large buffers instantiate many off-screen cards.
+        cacheBuffer: 600
         model: row.rowAppsModel
 
         delegate: AppCard {
