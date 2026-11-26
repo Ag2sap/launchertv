@@ -47,6 +47,9 @@ ApplicationWindow {
         id: bgA
         anchors.fill: parent
         fillMode: Image.PreserveAspectCrop
+        // Decode wallpapers near the actual display size instead of retaining
+        // full-resolution source images in memory on low-RAM TV hardware.
+        sourceSize: Qt.size(Math.ceil(root.width), Math.ceil(root.height))
         asynchronous: true
         opacity: root.bgShowA ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 1200 } }
@@ -55,6 +58,8 @@ ApplicationWindow {
         id: bgB
         anchors.fill: parent
         fillMode: Image.PreserveAspectCrop
+        // Keep the crossfade buffer bounded to the display resolution too.
+        sourceSize: Qt.size(Math.ceil(root.width), Math.ceil(root.height))
         asynchronous: true
         opacity: root.bgShowA ? 0 : 1
         Behavior on opacity { NumberAnimation { duration: 1200 } }
