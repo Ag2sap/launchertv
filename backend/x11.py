@@ -209,12 +209,30 @@ def is_window_minimized(wid):
     return "Map State: IsUnMapped" in info
 
 
+def set_undecorated(wid, enabled=True):
+    """Ask Openbox to add or remove its undecorated window state."""
+    wid_int = int(wid, 16) if isinstance(wid, str) else int(wid)
+    undecorated_atom = _intern(b"_OB_WM_STATE_UNDECORATED")
+    if not undecorated_atom:
+        return False
+    action = 1 if enabled else 0
+    _send_ewmh(
+        wid_int, b"_NET_WM_STATE",
+        [action, undecorated_atom, 0, 1, 0],
+    )
+    return True
+
+
 def remove_decorations(wid):
+    """Set portable Motif hints and request live undecoration from Openbox."""
     _run([
         "xprop", "-id", str(wid),
         "-f", "_MOTIF_WM_HINTS", "32c",
         "-set", "_MOTIF_WM_HINTS", "0x2, 0x0, 0x0, 0x0, 0x0",
     ])
+    # Openbox handles this state dynamically and updates an already-managed
+    # frame. Motif hints alone may be too late once the window is mapped.
+    set_undecorated(wid)
 
 
 def set_fullscreen(wid):
