@@ -229,11 +229,10 @@ def activate_window(wid):
 
 
 def restore_window(wid):
-    """Unhide, fullscreen, and activate a minimized application window."""
+    """Unhide and activate a minimized application window without resizing it."""
     wid_int = int(wid, 16) if isinstance(wid, str) else int(wid)
     hidden_atom = _intern(b"_NET_WM_STATE_HIDDEN")
     _send_ewmh(wid_int, b"_NET_WM_STATE", [0, hidden_atom, 0, 1, 0])
-    set_fullscreen(wid_int)
     activate_window(wid_int)
 
 
