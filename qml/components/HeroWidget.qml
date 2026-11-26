@@ -357,7 +357,8 @@ Item {
                 interactive: true
                 boundsBehavior: Flickable.StopAtBounds
                 clip: false
-                cacheBuffer: 2000
+                // Six recent apps need only a small prefetch window.
+                cacheBuffer: 350
                 model: mostUsedModel
 
                 delegate: AppCard {
