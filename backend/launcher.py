@@ -109,7 +109,7 @@ class AppLauncher(QObject):
                 if "LauncherTV" in x11.window_name(wid):
                     continue
                 x11.remove_decorations(wid)
-                x11.set_fullscreen(wid)
+                # Keep the child application's own window geometry and state.
                 tracked.add(wid)
 
             if tracked and first_found_at is None:
